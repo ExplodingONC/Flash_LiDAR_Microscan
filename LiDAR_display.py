@@ -267,15 +267,19 @@ try:
         # delta_F2 = (F2_Ch2 - F2_Ch1) + (F4_Ch1 - F4_Ch2)
         delta_F2 = (data[1, 1, :, :] - data[1, 0, :, :]) \
                  + (data[3, 0, :, :] - data[3, 1, :, :])
+        # mask for valid data (non-zero)
+        valid_mask = np.logical_or((np.abs(delta_F1) >= 10), (np.abs(delta_F2) >= 10))
         # calculate avg intensity
         intensity = np.sum(data, axis=(0, 1)) // 8
         # calculate distance
+        np.seterr(invalid='ignore')
         distance = (delta_F1 >= 0) \
                     * (delta_F2 / (np.abs(delta_F1) + np.abs(delta_F2)) + 1) \
                     * (const.speed_of_light * T0_pulse_time) / 4 \
                  + (delta_F1 < 0) \
                     * (-delta_F2 / (np.abs(delta_F1) + np.abs(delta_F2)) + 3) \
                     * (const.speed_of_light * T0_pulse_time) / 4
+        distance = valid_mask * distance
         # print distance
         np.set_printoptions(formatter={'float': lambda x: "{0:5.2f}".format(x)})
         print(distance)
