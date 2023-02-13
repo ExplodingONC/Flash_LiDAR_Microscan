@@ -279,6 +279,7 @@ try:
                  + (delta_F1 < 0) \
                     * (-delta_F2 / (np.abs(delta_F1) + np.abs(delta_F2)) + 3) \
                     * (const.speed_of_light * T0_pulse_time) / 4
+        distance = np.nan_to_num(distance, copy=False, nan=0, posinf=0, neginf=0)
         distance = valid_mask * distance
         # print distance
         np.set_printoptions(formatter={'float': lambda x: "{0:5.2f}".format(x)})
