@@ -55,6 +55,7 @@ class SensorSignal:
 
     # simulate data
     def sim_data(self, depth_map, downsample_ratio=2, shift_vec=[0, 0]):
+        assert tuple(np.array(self.resolution) * downsample_ratio) == np.shape(depth_map)
         self.shift_vector = np.array(shift_vec)
         self.downsample_ratio = downsample_ratio
         map_shift = np.rint(self.shift_vector * downsample_ratio)  # still float here
