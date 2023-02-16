@@ -14,6 +14,7 @@ def rebin(a, shape):
 
 
 def translate(a, vector, mode='edge'):
+    vector = np.array(vector, dtype=int)
     x, y = vector
     if x > 0:
         if y > 0:
@@ -66,7 +67,7 @@ class SensorSignal:
         self.shift_vector = shift_vec
         self.downsample_ratio = downsample_ratio
         map_shift = np.rint(self.shift_vector * downsample_ratio)  # still float here
-        depth_map = translate(depth_map, np.array(map_shift, dtype=int))
+        depth_map = translate(depth_map, map_shift)
         raw_data = np.zeros((4, 2) + np.shape(depth_map))
         # signal return time
         np.seterr(invalid='ignore')
