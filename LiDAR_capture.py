@@ -1,5 +1,6 @@
 # import system modules
 import errno
+import traceback
 import os
 import sys
 import subprocess
@@ -228,7 +229,7 @@ try:
 
         # LCoS modulation
         cv2.imshow("Modulation", np.zeros([monitors[0].height,monitors[0].width]))
-        cv2.waitKey(1)
+        cv2.waitKey(50)
         
         # [F1..F4] [VTX1,VTX2] [Y] [X]
         data = np.zeros((4, 2, height, width), dtype=np.int16)
@@ -292,6 +293,7 @@ try:
 
 except Exception as err:
     print("Error:", err)
+    traceback.print_exc()
 
 finally:
     # GC
