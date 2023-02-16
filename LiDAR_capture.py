@@ -71,6 +71,7 @@ try:
     print("Total screen count:", len(monitors))
     for monitor in monitors:
         print(monitor)
+    LCoS = monitors[0]
 except:
     print("No display is attached!")
     sys.exit()
@@ -215,16 +216,16 @@ try:
     # display window setup
     cv2.namedWindow("Modulation", cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
     # move to target screen before full screen
-    cv2.moveWindow("Modulation", monitors[0].x + 1, monitors[0].y + 1)
+    cv2.moveWindow("Modulation", LCoS.x + 1, LCoS.y + 1)
     cv2.setWindowProperty("Modulation", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
     # light path modulation images
-    modulation = np.zeros([5, monitors[0].height, monitors[0].width], dtype=np.uint8)
-    modulation[0, :, :] = gratings.blazed_grating([monitors[0].width, monitors[0].height], pitch=[np.inf, np.inf])
-    modulation[1, :, :] = gratings.blazed_grating([monitors[0].width, monitors[0].height], pitch=[100, 100])
-    modulation[2, :, :] = gratings.blazed_grating([monitors[0].width, monitors[0].height], pitch=[100, -100])
-    modulation[3, :, :] = gratings.blazed_grating([monitors[0].width, monitors[0].height], pitch=[-100, 100])
-    modulation[4, :, :] = gratings.blazed_grating([monitors[0].width, monitors[0].height], pitch=[-100, -100])
+    modulation = np.zeros([5, LCoS.height, LCoS.width], dtype=np.uint8)
+    modulation[0, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[np.inf, np.inf])
+    modulation[1, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[100, 100])
+    modulation[2, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[100, -100])
+    modulation[3, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-100, 100])
+    modulation[4, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-100, -100])
 
     # prepare data folder
     data_folder = f"data_{date.strftime('%Y%m%d-%H%M%S')}"
