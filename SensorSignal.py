@@ -15,7 +15,6 @@ def rebin(a, shape):
 
 def translate(a, vector, mode='edge'):
     x, y = vector
-    print(x, y)
     if x > 0:
         if y > 0:
             return np.pad(a, ((y, 0), (x, 0)), mode=mode)[:-y, :-x]
@@ -31,20 +30,28 @@ def translate(a, vector, mode='edge'):
 class SensorSignal:
 
     # physical
-    resolution = np.array([72, 96])
-    downsample_ratio = 1
-    shift_vector = np.array([0, 0])
-    T_0 = 133e-9
+    resolution: np.ndarray = [72, 96]
+    downsample_ratio: int = 1
+    shift_vector: np.ndarray = [0, 0]
+    T_0: float = 133e-9
     # data
-    data = []
-    delta_F1 = []
-    delta_F2 = []
+    data: np.ndarray = []
+    delta_F1: np.ndarray = []
+    delta_F2: np.ndarray = []
 
     # init
     def __init__(self, resolution, downsample_ratio=1):
         self.resolution = resolution
         self.downsample_ratio = downsample_ratio
         self.data = np.zeros([4, 2] + list(resolution))
+
+    # type fix
+    def __setattr__(self, name, value):
+        if name == 'resolution' and not isinstance(value, np.ndarray):
+            value = np.array(value)
+        if name == 'shift_vector' and not isinstance(value, np.ndarray):
+            value = np.array(value)
+        super().__setattr__(name, value)
 
     # input data
     def use_data(self, raw_data):
@@ -55,8 +62,8 @@ class SensorSignal:
 
     # simulate data
     def sim_data(self, depth_map, downsample_ratio=2, shift_vec=[0, 0]):
-        assert tuple(np.array(self.resolution) * downsample_ratio) == np.shape(depth_map)
-        self.shift_vector = np.array(shift_vec)
+        assert tuple(self.resolution * downsample_ratio) == np.shape(depth_map)
+        self.shift_vector = shift_vec
         self.downsample_ratio = downsample_ratio
         map_shift = np.rint(self.shift_vector * downsample_ratio)  # still float here
         depth_map = translate(depth_map, np.array(map_shift, dtype=int))
