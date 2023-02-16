@@ -2,7 +2,7 @@ import numpy as np
 import SensorSignal
 import superRes
 
-depth_map = (np.arange(16 * 24) / 10 + 1).reshape((16, 24))
+depth_map = (np.arange(16 * 24) / 4 + 1).reshape((16, 24))
 print(depth_map)
 
 sig = []

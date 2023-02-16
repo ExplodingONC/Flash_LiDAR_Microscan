@@ -134,6 +134,6 @@ class SensorSignal:
             + (self.delta_F1 <= 0) \
             * (-self.delta_F2 / (abs(self.delta_F1) + abs(self.delta_F2)) + 3) \
             / 4 * const.speed_of_light * self.T_0
-        depth_map = np.nan_to_num(depth_map, copy=False)
         depth_map = valid_mask * depth_map
+        depth_map = np.nan_to_num(depth_map, copy=False, nan=np.inf, posinf=np.inf, neginf=np.inf)
         return depth_map
