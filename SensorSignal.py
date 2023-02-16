@@ -13,6 +13,21 @@ def rebin(a, shape):
         return np.repeat(np.repeat(a, m // M, axis=0), n // N, axis=1)
 
 
+def translate(a, vector, mode='edge'):
+    x, y = vector
+    print(x,y)
+    if x > 0:
+        if y > 0:
+            return np.pad(a, ((y, 0), (x, 0)), mode=mode)[:-y, :-x]
+        else:
+            return np.pad(a, ((0, -y), (x, 0)), mode=mode)[-y:, :-x]
+    else:
+        if y > 0:
+            return np.pad(a, ((y, 0), (0, -x)), mode=mode)[:-y, -x:]
+        else:
+            return np.pad(a, ((0, -y), (0, -x)), mode=mode)[-y:, -x:]
+
+
 class SensorSignal:
 
     # physical
@@ -39,7 +54,7 @@ class SensorSignal:
     # simulate data
     def sim_data(self, depth_map, downsample_ratio=2, shift_vec=[0, 0]):
         self.shift_vector = np.array(shift_vec)
-        depth_map = np.roll(depth_map, self.shift_vector * downsample_ratio, (0, 1))
+        depth_map = translate(depth_map, self.shift_vector * downsample_ratio)
         raw_data = np.zeros((4, 2) + np.shape(depth_map))
         # signal return time
         np.seterr(invalid='ignore')
