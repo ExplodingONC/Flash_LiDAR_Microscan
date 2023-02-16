@@ -1,5 +1,6 @@
 # import system modules
 import errno
+import traceback
 import os
 import sys
 import subprocess
@@ -16,6 +17,8 @@ import cv2
 import RPi.GPIO as GPIO
 import smbus2
 import spidev
+# import custom modules
+import SensorSignal
 
 
 # parameters
@@ -261,26 +264,12 @@ try:
         print(f" - Full frame captured.")
         # make sure of no negative values
         data = np.maximum(data, 0)
-        # delta_F1 = (F1_Ch2 - F1_Ch1) + (F3_Ch1 - F3_Ch2)
-        delta_F1 = (data[0, 1, :, :] - data[0, 0, :, :]) \
-                 + (data[2, 0, :, :] - data[2, 1, :, :])
-        # delta_F2 = (F2_Ch2 - F2_Ch1) + (F4_Ch1 - F4_Ch2)
-        delta_F2 = (data[1, 1, :, :] - data[1, 0, :, :]) \
-                 + (data[3, 0, :, :] - data[3, 1, :, :])
-        # mask for valid data (non-zero)
-        valid_mask = np.logical_or((np.abs(delta_F1) >= 10), (np.abs(delta_F2) >= 10))
+        # process LiDAR data
+        sig = SensorSignal.SensorSignal([height, width])
+        sig.use_data(data, T0_pulse_time)
+        distance = sig.calc_dist()
         # calculate avg intensity
         intensity = np.sum(data, axis=(0, 1)) // 8
-        # calculate distance
-        np.seterr(invalid='ignore')
-        distance = (delta_F1 >= 0) \
-                    * (delta_F2 / (np.abs(delta_F1) + np.abs(delta_F2)) + 1) \
-                    * (const.speed_of_light * T0_pulse_time) / 4 \
-                 + (delta_F1 < 0) \
-                    * (-delta_F2 / (np.abs(delta_F1) + np.abs(delta_F2)) + 3) \
-                    * (const.speed_of_light * T0_pulse_time) / 4
-        distance = np.nan_to_num(distance, copy=False, nan=0, posinf=0, neginf=0)
-        distance = valid_mask * distance
         # print distance
         np.set_printoptions(formatter={'float': lambda x: "{0:5.2f}".format(x)})
         print(distance)
@@ -290,9 +279,8 @@ try:
         disp_intensity = np.minimum(disp_intensity, 255)
         cv2.imshow("Intensity", disp_intensity)
         cv2.waitKey(1)
+        
         print()
-        # pause a bit
-        # time.sleep(1)
 
     # end of while 1
 
@@ -300,6 +288,7 @@ try:
 
 except Exception as err:
     print("Error:", err)
+    traceback.print_exc()
 
 finally:
     # GC
