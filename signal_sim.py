@@ -2,7 +2,7 @@ import numpy as np
 import SensorSignal
 
 sig = SensorSignal.SensorSignal([8, 12])
-sig.T_0 = 8 / 60 * 1e-6
+sig.set_timing(8 / 60 * 1e-6)
 
 depth_map = (np.arange(16*24)/10+1).reshape((16,24))
 # depth_map = np.ones((16,24))*7

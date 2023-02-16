@@ -266,7 +266,8 @@ try:
         data = np.maximum(data, 0)
         # process LiDAR data
         sig = SensorSignal.SensorSignal([height, width])
-        sig.use_data(data, T0_pulse_time)
+        sig.use_data(data)
+        sig.set_timing(T0_pulse_time)
         distance = sig.calc_dist()
         # calculate avg intensity
         intensity = np.sum(data, axis=(0, 1)) // 8

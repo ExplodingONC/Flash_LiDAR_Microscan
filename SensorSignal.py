@@ -47,14 +47,17 @@ class SensorSignal:
         self.data = np.zeros([4, 2] + list(resolution))
 
     # input data
-    def use_data(self, raw_data, T_0):
+    def use_data(self, raw_data):
         self.data = raw_data
+
+    def set_timing(self, T_0):
         self.T_0 = T_0
 
     # simulate data
     def sim_data(self, depth_map, downsample_ratio=2, shift_vec=[0, 0]):
         self.shift_vector = np.array(shift_vec)
-        map_shift = np.rint(self.shift_vector * downsample_ratio) # still float here
+        self.downsample_ratio = downsample_ratio
+        map_shift = np.rint(self.shift_vector * downsample_ratio)  # still float here
         depth_map = translate(depth_map, np.array(map_shift, dtype=int))
         raw_data = np.zeros((4, 2) + np.shape(depth_map))
         # signal return time
