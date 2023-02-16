@@ -17,6 +17,8 @@ import cv2
 import RPi.GPIO as GPIO
 import smbus2
 import spidev
+# import custom functions
+import gratings
 
 
 # parameters
@@ -173,7 +175,7 @@ lidar_reg_map = (
     (0x1A, 0x1C),
     (0x1B, T0_pulse_width),  # light_pulse_width
     (0x1D, 0x01),  # light_pulse_offset
-    (0x1F, T0_pulse_width//2),  # P4_delay
+    (0x1F, T0_pulse_width // 2),  # P4_delay
     (0x20, 0b00001001),  # L/A, Light_pulse_half_delay, H_pixel_blanking
     # (0x21, 0x00),  # T1 (linear only)
     # (0x22, 0x00),  # PHIS (linear only)
@@ -217,7 +219,12 @@ try:
     cv2.setWindowProperty("Modulation", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
     # light path modulation images
-    pass # WIP
+    modulation = np.zeros([5, monitors[0].height, monitors[0].width], dtype=np.uint8)
+    modulation[0, :, :] = gratings.blazed_grating([monitors[0].width, monitors[0].height], pitch=[np.inf, np.inf])
+    modulation[1, :, :] = gratings.blazed_grating([monitors[0].width, monitors[0].height], pitch=[100, 100])
+    modulation[2, :, :] = gratings.blazed_grating([monitors[0].width, monitors[0].height], pitch=[100, -100])
+    modulation[3, :, :] = gratings.blazed_grating([monitors[0].width, monitors[0].height], pitch=[-100, 100])
+    modulation[4, :, :] = gratings.blazed_grating([monitors[0].width, monitors[0].height], pitch=[-100, -100])
 
     # prepare data folder
     data_folder = f"data_{date.strftime('%Y%m%d-%H%M%S')}"
@@ -225,12 +232,12 @@ try:
     subprocess.run(mkdir_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
     # main loop for LiDAR capturing
-    for multi_frame in range(4):
+    for multi_frame in range(5):
 
         # LCoS modulation
-        cv2.imshow("Modulation", np.zeros([monitors[0].height,monitors[0].width]))
+        cv2.imshow("Modulation", modulation[multi_frame, :, :])
         cv2.waitKey(50)
-        
+
         # [F1..F4] [VTX1,VTX2] [Y] [X]
         data = np.zeros((4, 2, height, width), dtype=np.int16)
 
@@ -239,14 +246,14 @@ try:
             # progress info
             print(f" - Trigger subframe F{subframe} capture and SPI read.")
             # command MCU to start frame capturing
-            time.sleep(0.01) # wait for MCU to flush FIFO
+            time.sleep(0.01)  # wait for MCU to flush FIFO
             spi.writebytes([0x00 | subframe])
             # query frame state
             timeout_counter = 0
             while True:
                 frame_state = spi.readbytes(1)
                 if frame_state[0] == (0x10 | subframe):
-                    time.sleep(0.01) # wait for MCU to flush FIFO
+                    time.sleep(0.01)  # wait for MCU to flush FIFO
                     break
                 else:
                     timeout_counter += 1
@@ -273,18 +280,18 @@ try:
         data = np.maximum(data, 0)
         # delta_F1 = (F1_Ch2 - F1_Ch1) + (F3_Ch1 - F3_Ch2)
         delta_F1 = (data[0, 1, :, :] - data[0, 0, :, :]) \
-                 + (data[2, 0, :, :] - data[2, 1, :, :])
+            + (data[2, 0, :, :] - data[2, 1, :, :])
         # delta_F2 = (F2_Ch2 - F2_Ch1) + (F4_Ch1 - F4_Ch2)
         delta_F2 = (data[1, 1, :, :] - data[1, 0, :, :]) \
-                 + (data[3, 0, :, :] - data[3, 1, :, :])
+            + (data[3, 0, :, :] - data[3, 1, :, :])
         # mask for valid data (non-zero)
         valid_mask = np.logical_or((np.abs(delta_F1) >= 10), (np.abs(delta_F2) >= 10))
-        
+
         # save data
         file_path = data_folder + f"/frame_{multi_frame}.npy"
         with open(file_path, 'wb') as data_file:
             np.save(data_file, data)
-        
+
         print()
 
     # end of for multi_frame in range(4)
