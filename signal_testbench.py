@@ -30,16 +30,16 @@ intensity = sig_sr.calc_intensity()
 print("calculation done.")
 
 # print depth_map
-im_depth = axs[0, 0].imshow(depth_map, cmap='viridis_r', vmin=0, vmax=15)
+im_depth = axs[0, 0].imshow(depth_map, cmap='viridis_r', vmin=0, vmax=15, interpolation='none')
 fig.colorbar(im_depth,ax=axs[0, 0])
 # print raw data
-im_raw = axs[1, 0].imshow(sigs[0].calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
+im_raw = axs[1, 0].imshow(sigs[0].calc_dist(), cmap='viridis_r', vmin=0, vmax=15, interpolation='none')
 fig.colorbar(im_raw,ax=axs[1, 0])
 # print super-res distance
-im_dist = axs[0, 1].imshow(distance, cmap='viridis_r', vmin=0, vmax=15)
+im_dist = axs[0, 1].imshow(distance, cmap='viridis_r', vmin=0, vmax=15, interpolation='none')
 fig.colorbar(im_dist,ax=axs[0, 1])
 # print super-res intensity
-im_inten = axs[1, 1].imshow(intensity, cmap='inferno', vmin=0, vmax=np.max(intensity))
+im_inten = axs[1, 1].imshow(intensity, cmap='inferno', vmin=0, vmax=np.max(intensity), interpolation='none')
 fig.colorbar(im_inten,ax=axs[1, 1])
 print("display done.")
 plt.show()
