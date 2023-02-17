@@ -3,7 +3,7 @@ import scipy.constants as const
 
 
 def rebin(a, shape):
-    M, N = a.shape
+    M, N = np.shape(a)
     m, n = shape
     assert M % m == 0 or m % M == 0
     assert N % n == 0 or n % N == 0
@@ -67,7 +67,7 @@ class SensorSignal:
         self.shift_vector = shift_vec
         self.downsample_ratio = downsample_ratio
         map_shift = np.rint(self.shift_vector * downsample_ratio)  # still float here
-        depth_map = translate(depth_map, map_shift)
+        depth_map = translate(depth_map, -map_shift)
         raw_data = np.zeros((4, 2) + np.shape(depth_map))
         # signal return time
         np.seterr(invalid='ignore')
