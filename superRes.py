@@ -36,7 +36,7 @@ def back_projection(sig_ref: SensorSignal, sig_iter: SensorSignal):
     return dist_diff
 
 
-def iterative(*sigs_ref: SensorSignal, iter_cnt=25):
+def iterative(*sigs_ref: SensorSignal, iter_cnt=25, term_cond=0):
     # prepare iteration start point
     sig_cnt = len(sigs_ref)
     depth_iter = linear(*sigs_ref).calc_dist()
@@ -59,6 +59,14 @@ def iterative(*sigs_ref: SensorSignal, iter_cnt=25):
         # update iterative depth map
         err_total = err_total / sig_cnt
         depth_iter = depth_iter + err_total * 0.5
+        # check terminate condition
+        if term_cond > 0 and np.all(np.isfinite(err_total)):
+            valid_mask = np.logical_and(np.isfinite(err_total), np.isfinite(depth_iter))
+            err_mean = np.mean(np.abs(err_total), where=valid_mask)  # (numpy 1.20 needed)
+            depth_mean = np.mean(depth_iter, where=valid_mask)  # (numpy 1.20 needed)
+            # print(f"{iter+1}: Err={err_mean:.2e} Avg={depth_mean:.2e} Acc={err_mean/depth_mean:.5f}")
+            if err_mean < depth_mean * term_cond:
+                break
     # generate result
     sig_ret = SensorSignal.SensorSignal(depth_iter.shape)
     sig_ret.sim_data(depth_iter, downsample_ratio=1, shift_vec=[0, 0])

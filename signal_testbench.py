@@ -25,7 +25,7 @@ sigs[3].sim_data(depth_map, downsample_ratio=2, shift_vec=[0.5, 0.5])
 print("simulation done.")
 
 np.set_printoptions(formatter={'float': lambda x: "{0:5.2f}".format(x)})
-sig_sr = superRes.iterative(*sigs)
+sig_sr = superRes.iterative(*sigs, iter_cnt=25, term_cond=5e-3)
 distance = sig_sr.calc_dist()
 intensity = sig_sr.calc_intensity()
 print("calculation done.")
