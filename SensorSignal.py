@@ -101,6 +101,10 @@ class SensorSignal:
             self.data[subframe, 0, :, :] = rebin(raw_data[subframe, 0, :, :], self.resolution)
             self.data[subframe, 1, :, :] = rebin(raw_data[subframe, 1, :, :], self.resolution)
 
+    # calculate intensity
+    def calc_intensity(self):
+        return np.sum(self.data, axis=(0, 1)) / 8
+
     # calculate deltas
     def calc_delta(self):
         # delta_F1 = (F1_Ch2 - F1_Ch1) + (F3_Ch1 - F3_Ch2)
