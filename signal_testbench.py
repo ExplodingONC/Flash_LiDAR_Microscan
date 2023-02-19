@@ -6,7 +6,8 @@ import superRes
 
 fig, axs = plt.subplots(2, 2)
 
-depth_map = np.ones([160, 200]) * 10
+depth_map = np.block([[np.ones([80, 200]) * np.inf,],
+                      [np.ones([80, 200]) * 10,]])
 for width in range(1, 10):
     start = 20 * width - 5
     end = start + width
@@ -32,19 +33,19 @@ print("calculation done.")
 mpl.rcParams['image.interpolation'] = 'none'
 # print depth_map
 im_depth = axs[0, 0].imshow(depth_map, cmap='viridis_r', vmin=0, vmax=15)
-fig.colorbar(im_depth,ax=axs[0, 0])
+fig.colorbar(im_depth, ax=axs[0, 0])
 axs[0, 0].set_title("Reference")
 # print raw data
 im_raw = axs[0, 1].imshow(sigs[0].calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
-fig.colorbar(im_raw,ax=axs[0, 1])
+fig.colorbar(im_raw, ax=axs[0, 1])
 axs[0, 1].set_title("Raw data")
 # print super-res distance (linear)
 im_dist = axs[1, 0].imshow(sig_sr_linear.calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
-fig.colorbar(im_dist,ax=axs[1, 0])
+fig.colorbar(im_dist, ax=axs[1, 0])
 axs[1, 0].set_title("Linear super-res")
 # print super-res distance (iterative)
 im_dist = axs[1, 1].imshow(sig_sr_ibp.calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
-fig.colorbar(im_dist,ax=axs[1, 1])
+fig.colorbar(im_dist, ax=axs[1, 1])
 axs[1, 1].set_title("IBP super-res")
 print("display done.")
 plt.show()
