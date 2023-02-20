@@ -216,8 +216,9 @@ try:
 
     # display window setup
     win_modulation = tk.Tk()
-    panel = tk.Label(win_modulation)
+    win_modulation.geometry(f"{LCoS.width}x{LCoS.height}+{LCoS.x}+{LCoS.y}")
     # win_modulation.attributes('-fullscreen', True)
+    panel = tk.Label(win_modulation)
 
     # light path modulation images
     modulation = np.zeros([5, LCoS.height, LCoS.width], dtype=np.uint8)
