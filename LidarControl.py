@@ -54,10 +54,10 @@ lidar_reg_map = (
 class LidarControl:
 
     # physical
-    width = int(104)  # not including header pixel
-    height = int(80)
-    Ndata = int(2)
-    pixel_count = (width + 1) * height
+    width: int = int(104)  # not including header pixel
+    height: int = int(80)
+    Ndata: int = int(2)
+    T_0: float = 8 / 60 * 1e-6
     # I/O
     i2c_dev = []
     i2c_channel = 1
@@ -68,10 +68,18 @@ class LidarControl:
     pin_sensor_rst_P = 4
     pin_mcu_rst_N = 23
 
-    def __init__(self, res=[104, 80], Ndata=2):
+    def __init__(self, res=[104, 80], Ndata=2, T_0=T0_pulse_time):
         self.width, self.height = res
         self.Ndata = Ndata
-        self.pixel_count = (self.width + 1) * self.height
+        self.T_0 = T_0
+
+    def __del__(self):
+        print("LiDAR clean up called.")
+        self.spi_dev.close()
+        try:
+            GPIO.cleanup()
+        except:
+            print("Fail to clean GPIO.")
 
     def connect_GPIO(self, sensor_rst=4, mcu_rst=23):
         self.pin_sensor_rst_P = sensor_rst
@@ -104,7 +112,7 @@ class LidarControl:
         else:
             print("I2C initialized.")
             self.i2c_dev = i2c_sensor
-        
+
     def connect_MCU(self, spi_ch=0, spi_num=0):
         self.spi_channel = spi_ch
         self.spi_device_MCU = spi_num
@@ -122,7 +130,7 @@ class LidarControl:
             spi_mcu.lsbfirst = False
             print(f"SPI initialized at {spi_mcu.max_speed_hz}Hz.")
             self.spi_dev = spi_mcu
-        
+
     def reset_sensor(self):
         GPIO.output(self.pin_sensor_rst_P, 1)
         time.sleep(0.05)
@@ -144,7 +152,7 @@ class LidarControl:
         else:
             print("MCU binary loaded.")
             return 0
-        
+
     def setup_sensor(self):
         try:
             # write regs and check step-by-step
@@ -154,16 +162,16 @@ class LidarControl:
                     raise Exception(f"Register validation failed! @{instruction}")
             time.sleep(0.01)
         except OSError as err:
-            print(" -", "OSError", err)
+            print("OSError", err)
             if err.errno == 121:
-                print(" - I2C: No response from device! Check wiring on GPIO2/3.")
+                print("I2C: No response from device! Check wiring on GPIO2/3.")
             raise RuntimeError("I2C device not connected!")
         except Exception as err:
             print("Error:", err)
-            print(" - I2C unknown error!")
+            print("I2C unknown error!")
             raise RuntimeError("I2C unknown error!")
         else:
-            print(" - I2C data sent.")
+            print("I2C data sent.")
             time.sleep(0.05)
 
     def acquire_data(self):
@@ -203,4 +211,3 @@ class LidarControl:
         # end of for subframe in range(1, 5)
         data = np.maximum(data, 0)  # make sure of no negative values
         return data
-
