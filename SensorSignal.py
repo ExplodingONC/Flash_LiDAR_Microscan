@@ -1,5 +1,7 @@
 import numpy as np
 import scipy.constants as const
+import time
+import spidev
 
 
 def rebin(a, shape):
@@ -26,6 +28,53 @@ def translate(a, vector, mode='edge'):
             return np.pad(a, ((y, 0), (0, -x)), mode=mode)[:-y, -x:]
         else:
             return np.pad(a, ((0, -y), (0, -x)), mode=mode)[-y:, -x:]
+
+
+def acquire_data(spi_dev, res=[80, 104], Ndata=2):
+    # [F1..F4] [VTX1,VTX2] [Y] [X]
+    data = np.zeros((4, 2, res[0], res[1]), dtype=np.int16)
+    # 4 subframes F1..F4
+    for subframe in range(1, 5):  # that's [1:4]
+        # progress info
+        print(f" - Trigger subframe F{subframe} capture and SPI read.")
+        # command MCU to start frame capturing
+        time.sleep(0.01)  # wait for MCU to flush FIFO
+        spi_dev.writebytes([0x00 | subframe])
+        # query frame state
+        timeout_counter = 0
+        while True:
+            frame_state = spi_dev.readbytes(1)
+            if frame_state[0] == (0x10 | subframe):
+                time.sleep(0.01)  # wait for MCU to flush FIFO
+                break
+            else:
+                timeout_counter += 1
+                # re-trigger if there is a timeout (SPI command lost)
+                if (timeout_counter > 250):
+                    timeout_counter = 0
+                    spi_dev.writebytes([0x00 | subframe])
+                    print(f" - Re-trigger subframe F{subframe} capture.")
+                time.sleep(0.01)
+        # data transfering
+        data_stream = np.zeros((Ndata, res[0], 2 * (res[1] + 1)), dtype=np.int16)
+        for integr in range(0, Ndata):
+            for line in range(0, res[0]):
+                temp = spi_dev.readbytes(4 * (res[1] + 1))
+                temp = np.array(temp, dtype=np.int16)
+                data_stream[integr, line, :] = (temp[1::2] & 0x0f) << 8 | temp[0::2]
+        data[subframe - 1, 0, :, :] = data_stream[Ndata - 1, :, 2::2] - data_stream[0, :, 2::2]
+        data[subframe - 1, 1, :, :] = data_stream[Ndata - 1, :, 3::2] - data_stream[0, :, 3::2]
+    # end of for subframe in range(1, 5)
+    data = np.maximum(data, 0)  # make sure of no negative values
+    return data
+
+
+def acquire_signal(spi_dev, res=[80, 104], shift_vec=[0, 0], Ndata=2, T_0=8 / 60 * 1e-6):
+    sig = SensorSignal([res[0], res[1]], downsample_ratio=2)
+    sig.use_data(acquire_data(spi_dev, res=res, Ndata=Ndata))
+    sig.set_timing(T_0)
+    sig.shift_vector = shift_vec
+    return sig
 
 
 class SensorSignal:

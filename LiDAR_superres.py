@@ -236,58 +236,22 @@ try:
     for multi_frame in range(5):
 
         # LCoS modulation
+        shift_vec = np.array([(multi_frame - 1) % 2, (multi_frame - 1) // 2]) / 2
         img =  ImageTk.PhotoImage(Image.fromarray(modulation[multi_frame, :, :]))
         panel.configure(image=img)
         panel.pack()
         win_modulation.update()
         time.sleep(0.1)
 
-        # [F1..F4] [VTX1,VTX2] [Y] [X]
-        data = np.zeros((4, 2, height, width), dtype=np.int16)
-
-        # 4 subframes F1..F4
-        for subframe in range(1, 5):  # that's [1:4]
-            # progress info
-            print(f" - Trigger subframe F{subframe} capture and SPI read.")
-            # command MCU to start frame capturing
-            time.sleep(0.01)  # wait for MCU to flush FIFO
-            spi.writebytes([0x00 | subframe])
-            # query frame state
-            timeout_counter = 0
-            while True:
-                frame_state = spi.readbytes(1)
-                if frame_state[0] == (0x10 | subframe):
-                    time.sleep(0.01)  # wait for MCU to flush FIFO
-                    break
-                else:
-                    timeout_counter += 1
-                    # re-trigger if there is a timeout (SPI command lost)
-                    if (timeout_counter > 250):
-                        timeout_counter = 0
-                        spi.writebytes([0x00 | subframe])
-                        print(f" - Re-trigger subframe F{subframe} capture.")
-                    time.sleep(0.01)
-            # data transfering
-            data_stream = np.zeros((Ndata, height, 2 * (width + 1)), dtype=np.int16)
-            for integr in range(0, Ndata):
-                for line in range(0, height):
-                    temp = spi.readbytes(4 * (width + 1))
-                    temp = np.array(temp, dtype=np.int16)
-                    data_stream[integr, line, :] = (temp[1::2] & 0x0f) << 8 | temp[0::2]
-            data[subframe - 1, 0, :, :] = data_stream[1, :, 2::2] - data_stream[0, :, 2::2]
-            data[subframe - 1, 1, :, :] = data_stream[1, :, 3::2] - data_stream[0, :, 3::2]
-        # end of for subframe in range(1, 5)
+        # acquire physical sensor data
+        # data = SensorSignal.acquire_data(spi, res=[height, width], Ndata=2)
+        sig = SensorSignal.acquire_signal(spi, res=[height, width], shift_vec=shift_vec, Ndata=2, T_0=T0_pulse_time)
 
         # progress info
         print(f" - Full frame {multi_frame} captured.")
-        # make sure of no negative values
-        data = np.maximum(data, 0)
         # log data
         if multi_frame > 0:
-            sigs.append(SensorSignal.SensorSignal([height, width], downsample_ratio=2))
-            sigs[-1].use_data(data)
-            sigs[-1].set_timing(T0_pulse_time)
-            sigs[-1].shift_vector = np.array([(multi_frame - 1) % 2, (multi_frame - 1) // 2]) / 2
+            sigs.append(sig)
 
         print()
 
