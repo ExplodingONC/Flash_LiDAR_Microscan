@@ -142,13 +142,12 @@ else:
     print("MCU binary loaded.")
 
 # reset devices
-time.sleep(0.1)
 GPIO.output(pin_sensor_rst_P, 1)
 # GPIO.output(pin_mcu_rst_N, 0)
-time.sleep(0.1)
+time.sleep(0.05)
 GPIO.output(pin_sensor_rst_P, 0)
 # GPIO.output(pin_mcu_rst_N, 1)
-time.sleep(0.1)
+time.sleep(0.05)
 print("Devices reset.")
 
 # LiDAR register map
@@ -213,7 +212,7 @@ try:
     else:
         print(" - I2C data sent.")
     print()
-    time.sleep(0.25)
+    time.sleep(0.05)
 
     # display window setup
     cv2.namedWindow("Intensity", cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
@@ -270,7 +269,7 @@ try:
         sig.set_timing(T0_pulse_time)
         distance = sig.calc_dist()
         # calculate avg intensity
-        intensity = np.sum(data, axis=(0, 1)) // 8
+        intensity = sig.calc_intensity() // 8
         # print distance
         np.set_printoptions(formatter={'float': lambda x: "{0:5.2f}".format(x)})
         print(distance)
