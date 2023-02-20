@@ -259,19 +259,32 @@ try:
     win_modulation.destroy()
 
     # IBP super-res
-    sig_sr_ibp = superRes.linear(*sigs)
-    # sig_sr_ibp = superRes.iterative(*sigs, iter_cnt=25, term_cond=5e-3)
-    print(" - Calculation done.")
+    sig_sr_lin = superRes.linear(*sigs)
+    print(" - Linear Calculation done.")
+    sig_sr_ibp = superRes.iterative(*sigs, iter_cnt=25, term_cond=5e-3)
+    print(" - Iterative Calculation done.")
     print(sig_sr_ibp.calc_dist())
 
     # result display
     os.environ["DISPLAY"] = default_DISPLAY_env
     mpl.rcParams['image.interpolation'] = 'none'
+    fig, axs = plt.subplots(nrows=2, ncols=2)
+    # print super-res distance (linear)
+    im_dist = axs[0,0].imshow(sig_sr_lin.calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
+    fig.colorbar(im_dist, ax=axs[0,0])
+    axs[0,0].set_title("IBP super-res")
+    # print super-res intensity (linear)
+    im_dist = axs[0,1].imshow(sig_sr_lin.calc_intensity(), cmap='inferno', vmin=0, vmax=np.max(sig_sr_lin.calc_intensity()))
+    fig.colorbar(im_dist, ax=axs[0,1])
+    axs[0,1].set_title("IBP super-res")
     # print super-res distance (iterative)
-    fig, ax = plt.subplots()
-    im_dist = ax.imshow(sig_sr_ibp.calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
-    fig.colorbar(im_dist, ax=ax)
-    ax.set_title("IBP super-res")
+    im_dist = axs[1,0].imshow(sig_sr_ibp.calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
+    fig.colorbar(im_dist, ax=axs[1,0])
+    axs[1,0].set_title("IBP super-res")
+    # print super-res intensity (iterative) (it's pointless here since intensity is fully simulated)
+    im_dist = axs[1,1].imshow(sig_sr_ibp.calc_intensity(), cmap='inferno', vmin=0, vmax=np.max(sig_sr_ibp.calc_intensity()))
+    fig.colorbar(im_dist, ax=axs[1,1])
+    axs[1,1].set_title("IBP super-res")
     print("display done.")
     plt.show()
 
