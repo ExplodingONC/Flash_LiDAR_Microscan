@@ -62,6 +62,8 @@ def iterative(*sigs_ref: SensorSignal, iter_cnt=25, term_cond=0):
         # check terminate condition
         if term_cond > 0 and np.all(np.isfinite(err_total)):
             valid_mask = np.logical_and(np.isfinite(err_total), np.isfinite(depth_iter))
+            if not np.any(valid_mask):
+                break
             err_mean = np.mean(np.abs(err_total), where=valid_mask)  # (numpy 1.20 needed)
             depth_mean = np.mean(depth_iter, where=valid_mask)  # (numpy 1.20 needed)
             # print(f"{iter+1}: Err={err_mean:.2e} Avg={depth_mean:.2e} Acc={err_mean/depth_mean:.5f}")
