@@ -12,7 +12,8 @@ import threading
 import ctypes
 import numpy as np
 import scipy.constants as const
-import cv2
+import tkinter as tk
+from PIL import ImageTk, Image
 # import I/O modules
 import RPi.GPIO as GPIO
 import smbus2
@@ -214,10 +215,9 @@ try:
     time.sleep(0.25)
 
     # display window setup
-    cv2.namedWindow("Modulation", cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
-    # move to target screen before full screen
-    cv2.moveWindow("Modulation", LCoS.x + 1, LCoS.y + 1)
-    cv2.setWindowProperty("Modulation", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    win_modulation = tk.Tk()
+    panel = tk.Label(win_modulation)
+    # win_modulation.attributes('-fullscreen', True)
 
     # light path modulation images
     modulation = np.zeros([5, LCoS.height, LCoS.width], dtype=np.uint8)
@@ -236,8 +236,10 @@ try:
     for multi_frame in range(5):
 
         # LCoS modulation
-        cv2.imshow("Modulation", modulation[multi_frame, :, :])
-        cv2.waitKey(50)
+        img =  ImageTk.PhotoImage(Image.fromarray(modulation[multi_frame, :, :]))
+        panel.configure(image=img)
+        panel.pack()
+        win_modulation.update()
 
         # [F1..F4] [VTX1,VTX2] [Y] [X]
         data = np.zeros((4, 2, height, width), dtype=np.int16)
@@ -296,6 +298,7 @@ try:
         print()
 
     # end of for multi_frame in range(4)
+    win_modulation.destroy()
 
 # end of main program
 
