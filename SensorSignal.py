@@ -84,6 +84,10 @@ class SensorSignal:
         ret = copy.deepcopy(self)
         ret.data = self.data * index
         return ret
+    def __truediv__(self, index: float):
+        ret = copy.deepcopy(self)
+        ret.data = self.data / index
+        return ret
             
     # input data
     def use_data(self, raw_data):
