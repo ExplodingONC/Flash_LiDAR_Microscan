@@ -115,12 +115,13 @@ try:
     modulation[4, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-100, -100])
 
     # main loop for LiDAR capturing
+    zero_order = []
     sigs = []
     for multi_frame in range(5):
 
         # LCoS modulation
         shift_vec = np.array([(multi_frame - 1) % 2, (multi_frame - 1) // 2]) / 2
-        img =  ImageTk.PhotoImage(Image.fromarray(modulation[multi_frame, :, :]))
+        img = ImageTk.PhotoImage(Image.fromarray(modulation[multi_frame, :, :]))
         panel.configure(image=img)
         panel.pack()
         win_modulation.update()
@@ -133,7 +134,10 @@ try:
         print(f" - Full frame {multi_frame} captured.")
         # log data
         if multi_frame > 0:
+            sig -= zero_order * 0.1  # subtract the 0th order diffraction
             sigs.append(sig)
+        else:
+            zero_order = sig
 
         print()
 
@@ -152,21 +156,21 @@ try:
     mpl.rcParams['image.interpolation'] = 'none'
     fig, axs = plt.subplots(nrows=2, ncols=2)
     # print super-res distance (linear)
-    im_dist = axs[0,0].imshow(sig_sr_lin.calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
-    fig.colorbar(im_dist, ax=axs[0,0])
-    axs[0,0].set_title("IBP super-res")
+    im_dist = axs[0, 0].imshow(sig_sr_lin.calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
+    fig.colorbar(im_dist, ax=axs[0, 0])
+    axs[0, 0].set_title("IBP super-res")
     # print super-res intensity (linear)
-    im_dist = axs[0,1].imshow(sig_sr_lin.calc_intensity(), cmap='inferno', vmin=0, vmax=np.max(sig_sr_lin.calc_intensity()))
-    fig.colorbar(im_dist, ax=axs[0,1])
-    axs[0,1].set_title("IBP super-res")
+    im_dist = axs[0, 1].imshow(sig_sr_lin.calc_intensity(), cmap='inferno', vmin=0, vmax=np.max(sig_sr_lin.calc_intensity()))
+    fig.colorbar(im_dist, ax=axs[0, 1])
+    axs[0, 1].set_title("IBP super-res")
     # print super-res distance (iterative)
-    im_dist = axs[1,0].imshow(sig_sr_ibp.calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
-    fig.colorbar(im_dist, ax=axs[1,0])
-    axs[1,0].set_title("IBP super-res")
+    im_dist = axs[1, 0].imshow(sig_sr_ibp.calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
+    fig.colorbar(im_dist, ax=axs[1, 0])
+    axs[1, 0].set_title("IBP super-res")
     # print super-res intensity (iterative) (it's pointless here since intensity is fully simulated)
-    im_dist = axs[1,1].imshow(sig_sr_ibp.calc_intensity(), cmap='inferno', vmin=0, vmax=np.max(sig_sr_ibp.calc_intensity()))
-    fig.colorbar(im_dist, ax=axs[1,1])
-    axs[1,1].set_title("IBP super-res")
+    im_dist = axs[1, 1].imshow(sig_sr_ibp.calc_intensity(), cmap='inferno', vmin=0, vmax=np.max(sig_sr_ibp.calc_intensity()))
+    fig.colorbar(im_dist, ax=axs[1, 1])
+    axs[1, 1].set_title("IBP super-res")
     print("display done.")
     plt.show()
 

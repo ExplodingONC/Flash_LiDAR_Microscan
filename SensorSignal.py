@@ -1,7 +1,6 @@
+import copy
 import numpy as np
 import scipy.constants as const
-import time
-import spidev
 
 
 def rebin(a, shape):
@@ -64,6 +63,28 @@ class SensorSignal:
             value = np.array(value)
         super().__setattr__(name, value)
 
+    # operators overload
+    def __add__(self, other):
+        if not isinstance(other, SensorSignal):
+            raise TypeError("Signals can only be add with another signal!")
+        if (self.resolution != other.resolution).any() or self.T_0 != other.T_0:
+            raise ValueError("Signals are not captured with same parameters!")
+        ret = copy.deepcopy(self)
+        ret.data = self.data - other.data
+        return ret
+    def __sub__(self, other):
+        if not isinstance(other, SensorSignal):
+            raise TypeError("Signals can only be subtracted by another signal!")
+        if (self.resolution != other.resolution).any() or self.T_0 != other.T_0:
+            raise ValueError("Signals are not captured with same parameters!")
+        ret = copy.deepcopy(self)
+        ret.data = self.data - other.data
+        return ret
+    def __mul__(self, index: float):
+        ret = copy.deepcopy(self)
+        ret.data = self.data * index
+        return ret
+            
     # input data
     def use_data(self, raw_data):
         self.data = raw_data
