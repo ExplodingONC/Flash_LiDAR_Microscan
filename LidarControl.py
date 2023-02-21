@@ -24,11 +24,13 @@ class LidarConfig:
     T0_pulse: int = 8
     VTX3_pulse: int = 28
     ADC_delay: int = 1
-    light_delay: int = 1
+    light_delay: float = 1
     extrst_pulse: int = 16384
     frame_blank: int = 255
 
     def generate_reg_map(self):
+        light_delay_int = int(self.light_delay)
+        light_delay_half = self.light_delay % 1 > 0
         return (
             (0x00, 0b11100011),  # stop operation
             (0x07, 0b11000000),  # unknown?
@@ -52,9 +54,9 @@ class LidarConfig:
             (0x19, (self.VTX3_pulse >> 8) & 0xFF),  # VTX3
             (0x1A, (self.VTX3_pulse) & 0xFF),
             (0x1B, (self.T0_pulse) & 0xFF),  # light_pulse_width
-            (0x1D, (self.light_delay) & 0xFF),  # light_pulse_offset
+            (0x1D, (light_delay_int) & 0xFF),  # light_pulse_offset
             (0x1F, (self.T0_pulse >> 1) & 0x7F),  # P4_half_delay, P4_delay
-            (0x20, 0b00001001),  # L/A, Light_pulse_half_delay, H_pixel_blanking
+            (0x20, (0b0 << 7) | ((light_delay_half << 6) & 0x40) | (0b1001)),  # L/A, Light_pulse_half_delay, H_pixel_blanking
             # (0x21, 0x00),  # T1 (linear only)
             # (0x22, 0x00),  # PHIS (linear only)
             # (0x23, 0x00),  # T2 (linear only)
