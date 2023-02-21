@@ -104,6 +104,7 @@ try:
     # display window setup
     win_modulation = tk.Tk()
     win_modulation.geometry(f"{LCoS.width}x{LCoS.height}+{LCoS.x}+{LCoS.y}")
+    win_modulation.config(cursor="none")  # hide cursor
     # win_modulation.overrideredirect(True)  # borderless
     # win_modulation.attributes('-fullscreen', True)  # full screen
     panel = tk.Label(win_modulation)
@@ -151,7 +152,6 @@ try:
     print(" - Linear Calculation done.")
     sig_sr_ibp = superRes.iterative(*sigs, iter_cnt=25, term_cond=5e-3)
     print(" - Iterative Calculation done.")
-    print(sig_sr_ibp.calc_dist())
 
     # result display
     os.environ["DISPLAY"] = default_DISPLAY_env
