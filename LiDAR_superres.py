@@ -70,10 +70,11 @@ except:
 print()
 
 # Lidar setup
-width = int(104)  # not including header pixel
-height = int(80)
-Ndata = int(2)
-lidar = LidarControl.LidarControl(res=[width, height], Ndata=Ndata)
+lidar_cfg = LidarControl.LidarConfig()
+lidar_cfg.width = int(104)  # not including header pixel
+lidar_cfg.height = int(80)
+lidar_cfg.Ndata = int(2)
+lidar = LidarControl.LidarControl(lidar_cfg)
 try:
     lidar.connect_GPIO()
     lidar.connect_sensor()

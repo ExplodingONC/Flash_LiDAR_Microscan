@@ -10,45 +10,59 @@ import spidev
 # import utility modules
 import numpy as np
 import scipy.constants as const
+from dataclasses import dataclass
 
 
-# LiDAR register map
-T0_pulse_width = 0x08
-T0_pulse_time = T0_pulse_width / 60 * 1e-6
-lidar_reg_map = (
-    (0x00, 0b11100011),  # stop operation
-    (0x07, 0b11000000),  # unknown?
-    (0x08, 0x40),  # ext_reset
-    (0x09, 0x00),
-    (0x0A, 0x00),  # H_pixel_num
-    (0x0B, 0x68),
-    (0x0C, 0x00),  # V_pixel_num
-    (0x0D, 0x50),
-    (0x0E, 0x25),  # HST_offset
-    (0x0F, 0b10110111),  # light_pattern
-    (0x10, 0xFF),  # frame blanking
-    (0x11, 0x00),
-    (0x12, 0x08),  # ADC_delay_cfg
-    (0x13, 0b01000000),  # LV_delay, Nlight
-    (0x14, 0x04),
-    (0x15, 0x00),
-    (0x16, 0x02),  # Ndata (must be >1, otherwise only reset value is read and VTX won't trigger)
-    (0x17, T0_pulse_width),  # VTX1
-    (0x18, T0_pulse_width),  # VTX2
-    (0x19, 0x00),  # VTX3
-    (0x1A, 0x1C),
-    (0x1B, T0_pulse_width),  # light_pulse_width
-    (0x1D, 0x01),  # light_pulse_offset
-    (0x1F, T0_pulse_width // 2),  # P4_delay
-    (0x20, 0b00001001),  # L/A, Light_pulse_half_delay, H_pixel_blanking
-    # (0x21, 0x00),  # T1 (linear only)
-    # (0x22, 0x00),  # PHIS (linear only)
-    # (0x23, 0x00),  # T2 (linear only)
-    (0x24, 0b00001111),  # timing signal enable: light/VTX1/VTX2/VTX3
-    (0x00, 0b11000011),  # start clock divider
-    (0x00, 0b10000011),  # start clock
-    (0x00, 0b00000011),  # start timing gen
-)
+@dataclass
+class LidarConfig:
+    # dimensions
+    height: int = 80
+    width: int = 104
+    Ndata: int = 2
+    Nlight: int = 1024
+    # timing
+    T0_pulse: int = 8
+    VTX3_pulse: int = 28
+    ADC_delay: int = 1
+    light_delay: int = 1
+    extrst_pulse: int = 16384
+    frame_blank: int = 255
+
+    def generate_reg_map(self):
+        return (
+            (0x00, 0b11100011),  # stop operation
+            (0x07, 0b11000000),  # unknown?
+            (0x08, (self.extrst_pulse >> 8) & 0xFF),  # ext_reset
+            (0x09, (self.extrst_pulse) & 0xFF),
+            (0x0A, (self.width >> 8) & 0xFF),  # H_pixel_num
+            (0x0B, (self.width) & 0xFF),
+            (0x0C, (self.height >> 8) & 0xFF),  # V_pixel_num
+            (0x0D, (self.height) & 0xFF),
+            (0x0E, 0x25),  # HST_offset
+            (0x0F, 0b10110111),  # light_pattern
+            (0x10, (self.frame_blank) & 0xFF),  # frame blanking
+            (0x11, (self.frame_blank >> 8) & 0xFF),
+            (0x12, (self.ADC_delay) & 0x1F),  # ADC_delay_cfg
+            (0x13, (0b0100 << 4) | ((self.Nlight >> 16) & 0x0F)),  # LV_delay, Nlight
+            (0x14, (self.Nlight >> 8) & 0xFF),
+            (0x15, (self.Nlight) & 0xFF),
+            (0x16, (self.Ndata) & 0xFF),  # Ndata (must be >1, otherwise only reset value is read and VTX won't trigger)
+            (0x17, (self.T0_pulse) & 0xFF),  # VTX1
+            (0x18, (self.T0_pulse) & 0xFF),  # VTX2
+            (0x19, (self.VTX3_pulse >> 8) & 0xFF),  # VTX3
+            (0x1A, (self.VTX3_pulse) & 0xFF),
+            (0x1B, (self.T0_pulse) & 0xFF),  # light_pulse_width
+            (0x1D, (self.light_delay) & 0xFF),  # light_pulse_offset
+            (0x1F, (self.T0_pulse >> 1) & 0x7F),  # P4_half_delay, P4_delay
+            (0x20, 0b00001001),  # L/A, Light_pulse_half_delay, H_pixel_blanking
+            # (0x21, 0x00),  # T1 (linear only)
+            # (0x22, 0x00),  # PHIS (linear only)
+            # (0x23, 0x00),  # T2 (linear only)
+            (0x24, 0b00001111),  # timing signal enable: light/VTX1/VTX2/VTX3
+            (0x00, 0b11000011),  # start clock divider
+            (0x00, 0b10000011),  # start clock
+            (0x00, 0b00000011),  # start timing gen
+        )
 
 
 class LidarControl:
@@ -68,10 +82,12 @@ class LidarControl:
     pin_sensor_rst_P = 4
     pin_mcu_rst_N = 23
 
-    def __init__(self, res=[104, 80], Ndata=2, T_0=T0_pulse_time):
-        self.width, self.height = res
-        self.Ndata = Ndata
-        self.T_0 = T_0
+    def __init__(self, config=LidarConfig()):
+        self.width = config.width
+        self.height = config.height
+        self.Ndata = config.Ndata
+        self.T_0 = config.T0_pulse / 60 * 1e-6
+        self.config = config
 
     def __del__(self):
         print("LiDAR clean up called.")
@@ -155,6 +171,7 @@ class LidarControl:
 
     def setup_sensor(self):
         try:
+            lidar_reg_map = self.config.generate_reg_map()
             # write regs and check step-by-step
             for instruction in lidar_reg_map:
                 self.i2c_dev.write_byte_data(self.i2c_address_lidar, instruction[0], instruction[1])
