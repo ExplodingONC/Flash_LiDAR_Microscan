@@ -104,7 +104,8 @@ try:
     # display window setup
     win_modulation = tk.Tk()
     win_modulation.geometry(f"{LCoS.width}x{LCoS.height}+{LCoS.x}+{LCoS.y}")
-    # win_modulation.attributes('-fullscreen', True)
+    # win_modulation.overrideredirect(True)  # borderless
+    # win_modulation.attributes('-fullscreen', True)  # full screen
     panel = tk.Label(win_modulation)
 
     # light path modulation images
