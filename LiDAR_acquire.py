@@ -31,7 +31,7 @@ else:
 
 # Lidar init
 try:
-    lidar.reset_sensor()
+    lidar.reset_device()
     lidar.load_MCU()
     lidar.setup_sensor()
 except Exception as err:

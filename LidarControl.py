@@ -8,6 +8,7 @@ import RPi.GPIO as GPIO
 import smbus2
 import spidev
 # import utility modules
+import math
 import numpy as np
 import scipy.constants as const
 from dataclasses import dataclass
@@ -29,7 +30,7 @@ class LidarConfig:
     frame_blank: int = 255
 
     def generate_reg_map(self):
-        light_delay_int = int(self.light_delay)
+        light_delay_int = math.ceil(self.light_delay)
         light_delay_half = self.light_delay % 1 > 0
         return (
             (0x00, 0b11100011),  # stop operation
@@ -93,29 +94,28 @@ class LidarControl:
 
     def __del__(self):
         print("LiDAR clean up called.")
-        self.spi_dev.close()
         try:
+            self.spi_dev.close()
             GPIO.cleanup()
-        except:
-            print("Fail to clean GPIO.")
-
-    def connect_GPIO(self, sensor_rst=4, mcu_rst=23):
-        self.pin_sensor_rst_P = sensor_rst
-        self.pin_mcu_rst_N = mcu_rst
-        try:
-            GPIO.setmode(GPIO.BCM)
-            GPIO.setup(self.pin_sensor_rst_P, GPIO.OUT, initial=0)  # sensor reset (P)
-            # GPIO.setup(pin_mcu_rst_N, GPIO.OUT, initial=1)  # MCU reset (N)
         except Exception as err:
-            print("Error:", err)
-            print("GPIO initialization failed!")
-            raise RuntimeError("GPIO not available!")
-        else:
-            print("GPIO initialized.")
+            print("Fail to clean GPIO.")
+            print(err)
 
-    def connect_sensor(self, i2c_ch=1, i2c_addr=0x2A):
+    def connect_GPIO(self):
+        GPIO.setmode(GPIO.BCM)
+
+    def connect_sensor(self, i2c_ch=1, i2c_addr=0x2A, pin_sensor_rst=4):
         self.i2c_channel = i2c_ch
         self.i2c_address_lidar = i2c_addr
+        self.pin_sensor_rst_P = pin_sensor_rst
+        try:
+            GPIO.setup(self.pin_sensor_rst_P, GPIO.OUT, initial=0)  # sensor reset (P)
+        except Exception as err:
+            print("Error:", err)
+            print("Sensor rst pin initialization failed!")
+            raise RuntimeError("GPIO not available!")
+        else:
+            print("Sensor rst pin initialized.")
         try:
             i2c_sensor = smbus2.SMBus(self.i2c_channel)
         except FileNotFoundError as err:
@@ -131,9 +131,18 @@ class LidarControl:
             print("I2C initialized.")
             self.i2c_dev = i2c_sensor
 
-    def connect_MCU(self, spi_ch=0, spi_num=0):
+    def connect_MCU(self, spi_ch=0, spi_num=0, pin_mcu_rst=23):
         self.spi_channel = spi_ch
         self.spi_device_MCU = spi_num
+        self.pin_mcu_rst_N = pin_mcu_rst
+        try:
+            GPIO.setup(self.pin_mcu_rst_N, GPIO.OUT, initial=1)  # MCU reset (N)
+        except Exception as err:
+            print("Error:", err)
+            print("MCU rst pin initialization failed!")
+            raise RuntimeError("GPIO not available!")
+        else:
+            print("MCU rst pin initialized.")
         try:
             spi_mcu = spidev.SpiDev()
             spi_mcu.open(self.spi_channel, self.spi_device_MCU)
@@ -149,10 +158,12 @@ class LidarControl:
             print(f"SPI initialized at {spi_mcu.max_speed_hz}Hz.")
             self.spi_dev = spi_mcu
 
-    def reset_sensor(self):
+    def reset_device(self):
         GPIO.output(self.pin_sensor_rst_P, 1)
+        GPIO.output(self.pin_mcu_rst_N, 0)
         time.sleep(0.05)
         GPIO.output(self.pin_sensor_rst_P, 0)
+        GPIO.output(self.pin_mcu_rst_N, 1)
         time.sleep(0.05)
         print("Devices reset.")
 

@@ -71,6 +71,8 @@ lidar_cfg = LidarControl.LidarConfig()
 lidar_cfg.width = int(104)  # not including header pixel
 lidar_cfg.height = int(80)
 lidar_cfg.Ndata = int(2)
+lidar_cfg.Nlight = int(128)
+lidar_cfg.light_delay = 3.5
 lidar = LidarControl.LidarControl(lidar_cfg)
 try:
     lidar.connect_GPIO()
@@ -84,7 +86,7 @@ else:
 
 # Lidar init
 try:
-    lidar.reset_sensor()
+    lidar.reset_device()
     lidar.load_MCU()
     lidar.setup_sensor()
 except Exception as err:
@@ -111,6 +113,9 @@ try:
         sig = SensorSignal.acquire_signal(lidar, shift_vec=[0, 0], downsample_ratio=2)
         # progress info
         print(f" - Full frame captured.")
+
+        print(sig.data[0,0,:,:])
+        print(sig.data[0,1,:,:])
 
         # process LiDAR data
         distance = sig.calc_dist()

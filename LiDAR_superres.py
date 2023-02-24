@@ -74,6 +74,8 @@ lidar_cfg = LidarControl.LidarConfig()
 lidar_cfg.width = int(104)  # not including header pixel
 lidar_cfg.height = int(80)
 lidar_cfg.Ndata = int(2)
+lidar_cfg.Nlight = int(128)
+lidar_cfg.light_delay = 3.5
 lidar = LidarControl.LidarControl(lidar_cfg)
 try:
     lidar.connect_GPIO()
@@ -87,7 +89,7 @@ else:
 
 # Lidar init
 try:
-    lidar.reset_sensor()
+    lidar.reset_device()
     lidar.load_MCU()
     lidar.setup_sensor()
 except Exception as err:
@@ -105,8 +107,8 @@ try:
     win_modulation = tk.Tk()
     win_modulation.geometry(f"{LCoS.width}x{LCoS.height}+{LCoS.x}+{LCoS.y}")
     win_modulation.config(cursor="none")  # hide cursor
-    # win_modulation.overrideredirect(True)  # borderless
-    # win_modulation.attributes('-fullscreen', True)  # full screen
+    win_modulation.overrideredirect(True)  # borderless
+    win_modulation.attributes('-fullscreen', True)  # full screen
     panel = tk.Label(win_modulation)
 
     # light path modulation images
