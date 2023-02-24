@@ -158,12 +158,16 @@ class LidarControl:
             print(f"SPI initialized at {spi_mcu.max_speed_hz}Hz.")
             self.spi_dev = spi_mcu
 
-    def reset_device(self):
-        GPIO.output(self.pin_sensor_rst_P, 1)
-        GPIO.output(self.pin_mcu_rst_N, 0)
+    def reset_device(self, sensor=True, mcu=False):
+        if sensor:
+            GPIO.output(self.pin_sensor_rst_P, 1)
+        if mcu:
+            GPIO.output(self.pin_mcu_rst_N, 0)
         time.sleep(0.05)
-        GPIO.output(self.pin_sensor_rst_P, 0)
-        GPIO.output(self.pin_mcu_rst_N, 1)
+        if sensor:
+            GPIO.output(self.pin_sensor_rst_P, 0)
+        if mcu:
+            GPIO.output(self.pin_mcu_rst_N, 1)
         time.sleep(0.05)
         print("Devices reset.")
 
