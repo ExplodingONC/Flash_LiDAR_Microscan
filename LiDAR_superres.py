@@ -164,7 +164,7 @@ try:
     fig.colorbar(im_dist, ax=axs[0, 0])
     axs[0, 0].set_title("Raw distance")
     # print raw intensity
-    im_int = axs[1, 0].imshow(sigs[0].calc_intensity(), cmap='inferno', vmin=0, vmax=np.max(sig_sr_lin.calc_intensity()))
+    im_int = axs[1, 0].imshow(sigs[0].calc_intensity(), cmap='inferno', vmin=0, vmax=np.max(sigs[0].calc_intensity()))
     fig.colorbar(im_int, ax=axs[1, 0])
     axs[1, 0].set_title("Raw intensity")
     # print super-res distance (linear)
