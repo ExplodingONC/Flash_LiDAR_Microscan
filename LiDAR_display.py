@@ -8,7 +8,8 @@ import screeninfo
 # import utility modules
 import numpy as np
 import scipy.constants as const
-import cv2
+import tkinter as tk
+from PIL import ImageTk, Image
 # import custom modules
 import LidarControl
 import SensorSignal
@@ -61,6 +62,7 @@ try:
     print("Total screen count:", len(monitors))
     for monitor in monitors:
         print(monitor)
+    display = monitors[0]
 except:
     print("No display is attached!")
     sys.exit()
@@ -101,10 +103,14 @@ print()
 try:
 
     # display window setup
-    cv2.namedWindow("Intensity", cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
-    # move to target screen before full screen
-    cv2.moveWindow("Intensity", monitors[0].x + 1, monitors[0].y + 1)
-    cv2.setWindowProperty("Intensity", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    target_width = display.width // 2
+    target_height = display.height // 2
+    target_scale = min((target_width // lidar_cfg.width), (target_height // lidar_cfg.height))
+    window_width = target_scale * lidar_cfg.width
+    window_height = target_scale * lidar_cfg.height
+    win_display = tk.Tk()
+    panel = tk.Label(win_display)
+    win_display.geometry(f"{window_width}x{window_height}+{display.x}+{display.y}")
 
     # main loop for LiDAR capturing
     while 1:
@@ -114,8 +120,8 @@ try:
         # progress info
         print(f" - Full frame captured.")
 
-        print(sig.data[0,0,:,:])
-        print(sig.data[0,1,:,:])
+        print(sig.data[0, 0, :, :])
+        print(sig.data[0, 1, :, :])
 
         # process LiDAR data
         distance = sig.calc_dist()
@@ -128,9 +134,11 @@ try:
         disp_intensity = np.array(intensity // 4, dtype=np.uint8)
         # make sure of no overflow values
         disp_intensity = np.minimum(disp_intensity, 255)
-        cv2.imshow("Intensity", disp_intensity)
-        cv2.waitKey(1)
-        
+        img = ImageTk.PhotoImage(Image.fromarray(disp_intensity).resize((window_width, window_height), Image.NEAREST))
+        panel.configure(image=img)
+        panel.pack()
+        win_display.update()
+
         print()
 
     # end of while 1
