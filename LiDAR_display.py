@@ -109,8 +109,8 @@ try:
     window_width = target_scale * lidar_cfg.width
     window_height = target_scale * lidar_cfg.height
     win_display = tk.Tk()
-    panel = tk.Label(win_display)
     win_display.geometry(f"{window_width}x{window_height}+{display.x}+{display.y}")
+    panel = tk.Label(win_display)
 
     # main loop for LiDAR capturing
     while 1:
