@@ -18,6 +18,8 @@ lidar_cfg = LidarControl.LidarConfig()
 lidar_cfg.width = int(104)  # not including header pixel
 lidar_cfg.height = int(80)
 lidar_cfg.Ndata = int(2)
+lidar_cfg.Nlight = int(32)
+lidar_cfg.light_delay = 1.5
 lidar = LidarControl.LidarControl(lidar_cfg)
 try:
     lidar.connect_GPIO()
@@ -52,10 +54,18 @@ try:
         data = lidar.acquire_data()
         # progress info
         print(f" - Full frame captured.")
-        
+        delta_F1 = (data[0, 1, :, :] - data[0, 0, :, :]) \
+            + (data[2, 0, :, :] - data[2, 1, :, :])
+        delta_F2 = (data[1, 1, :, :] - data[1, 0, :, :]) \
+            + (data[3, 0, :, :] - data[3, 1, :, :])
+        print("F1_Ch1", data[0, 0, 0, 0] + data[2, 1, 0, 0], " F1_Ch2", data[0, 1, 0, 0] + data[2, 0, 0, 0])
+        print("Delta_1", delta_F1[0, 0])
+        print("F2_Ch1", data[1, 0, 0, 0] + data[3, 1, 0, 0], " F2_Ch2", data[1, 1, 0, 0] + data[3, 0, 0, 0])
+        print("Delta_2", delta_F2[0, 0])
+
         # calculate avg intensity
-        intensity = numpy.sum(data, axis=(0,1)) // 8
-        print(intensity)
+        intensity = numpy.sum(data, axis=(0, 1)) // 8
+        # print(intensity)
         # pause a bit
         print()
         time.sleep(5)

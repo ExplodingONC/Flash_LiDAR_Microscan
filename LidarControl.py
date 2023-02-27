@@ -25,7 +25,7 @@ class LidarConfig:
     T0_pulse: int = 8
     VTX3_pulse: int = 28
     ADC_delay: int = 1
-    light_delay: float = 1
+    light_delay: float = 1.5
     extrst_pulse: int = 16384
     frame_blank: int = 255
 
