@@ -64,6 +64,7 @@ try:
     LCoS = monitors[0]
 except:
     print("No display is attached!")
+    os.environ["DISPLAY"] = default_DISPLAY_env
     sys.exit()
 print()
 
@@ -79,6 +80,7 @@ try:
     lidar.connect_MCU()
 except Exception as err:
     print("Error:", err)
+    os.environ["DISPLAY"] = default_DISPLAY_env
     sys.exit()
 else:
     print(" - LiDAR hardware connected.")
@@ -90,6 +92,7 @@ try:
     lidar.setup_sensor()
 except Exception as err:
     print("Error:", err)
+    os.environ["DISPLAY"] = default_DISPLAY_env
     sys.exit()
 else:
     print(" - LiDAR ready.")

@@ -1,8 +1,12 @@
 # import system modules
 import os
 import sys
+import errno
 import subprocess
 import time
+import signal
+import functools
+
 # import I/O modules
 import RPi.GPIO as GPIO
 import smbus2
@@ -12,6 +16,24 @@ import math
 import numpy as np
 import scipy.constants as const
 from dataclasses import dataclass
+
+
+def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
+    def decorator(func):
+        def _handle_timeout(signum, frame):
+            raise TimeoutError(error_message)
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            signal.signal(signal.SIGALRM, _handle_timeout)
+            signal.alarm(seconds)
+            try:
+                result = func(*args, **kwargs)
+            finally:
+                signal.alarm(0)
+            return result
+        return wrapper
+    return decorator
 
 
 @dataclass
@@ -171,6 +193,7 @@ class LidarControl:
         time.sleep(0.05)
         print("Devices reset.")
 
+    @timeout(5)
     def load_MCU(self, binary_path="dvp2spi_lnk.elf"):
         try:
             load_cmd = ["openocd",
@@ -194,7 +217,6 @@ class LidarControl:
                 self.i2c_dev.write_byte_data(self.i2c_address_lidar, instruction[0], instruction[1])
                 if instruction[1] != self.i2c_dev.read_byte_data(self.i2c_address_lidar, instruction[0]):
                     raise Exception(f"Register validation failed! @{instruction}")
-            time.sleep(0.01)
         except OSError as err:
             print("OSError", err)
             if err.errno == 121:
@@ -208,6 +230,7 @@ class LidarControl:
             print("I2C data sent.")
             time.sleep(0.05)
 
+    @timeout(20)
     def acquire_data(self):
         # [F1..F4] [VTX1,VTX2] [Y] [X]
         data = np.zeros((4, 2, self.height, self.width), dtype=np.int16)
