@@ -6,7 +6,6 @@ import subprocess
 import time
 import signal
 import functools
-
 # import I/O modules
 import RPi.GPIO as GPIO
 import smbus2
@@ -185,12 +184,12 @@ class LidarControl:
             GPIO.output(self.pin_sensor_rst_P, 1)
         if mcu:
             GPIO.output(self.pin_mcu_rst_N, 0)
-        time.sleep(0.05)
+        time.sleep(0.01)
         if sensor:
             GPIO.output(self.pin_sensor_rst_P, 0)
         if mcu:
             GPIO.output(self.pin_mcu_rst_N, 1)
-        time.sleep(0.05)
+        time.sleep(0.01)
         print("Devices reset.")
 
     @timeout(5)
@@ -207,7 +206,6 @@ class LidarControl:
             raise RuntimeError("MCU binary loading failed!")
         else:
             print("MCU binary loaded.")
-            return 0
 
     def setup_sensor(self):
         try:
@@ -228,7 +226,6 @@ class LidarControl:
             raise RuntimeError("I2C unknown error!")
         else:
             print("I2C data sent.")
-            time.sleep(0.05)
 
     @timeout(20)
     def acquire_data(self):
