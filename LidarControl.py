@@ -1,4 +1,5 @@
 # import system modules
+import traceback
 import os
 import sys
 import errno
@@ -193,12 +194,17 @@ class LidarControl:
         print("Devices reset.")
 
     @timeout(5)
-    def load_MCU(self, binary_path="dvp2spi_lnk.elf"):
+    def load_MCU(self, binary_path="dvp2proc2spi_lnk.elf"):
         try:
+            openocd_cmd = f"program {binary_path} verify; " + \
+                "reset halt; " + \
+                "rp2040.core1 arp_reset assert 0; " + \
+                "rp2040.core0 arp_reset assert 0; " + \
+                "exit"
             load_cmd = ["openocd",
                         "-f", "interface/raspberrypi-swd.cfg",
                         "-f", "target/rp2040.cfg",
-                        "-c", f"program {binary_path} verify reset exit"]
+                        "-c", openocd_cmd]
             subprocess.run(load_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
         except Exception as err:
             print("Error:", err)
@@ -227,41 +233,38 @@ class LidarControl:
         else:
             print("I2C data sent.")
 
-    @timeout(20)
+    @timeout(10)
     def acquire_data(self):
         # [F1..F4] [VTX1,VTX2] [Y] [X]
         data = np.zeros((4, 2, self.height, self.width), dtype=np.int16)
-        # 4 subframes F1..F4
-        for subframe in range(1, 5):  # that's [1:4]
-            # progress info
-            print(f" - Trigger subframe F{subframe} capture and SPI read.")
-            # command MCU to start frame capturing
+        # progress info
+        print(f" - Trigger Frame capture and SPI read.")
+        # command MCU to start frame capturing
+        time.sleep(0.01)  # wait for MCU to flush FIFO
+        self.spi_dev.writebytes([0x01])
+        # query frame state
+        timeout_counter = 0
+        while True:
+            frame_state = self.spi_dev.readbytes(1)
             time.sleep(0.01)  # wait for MCU to flush FIFO
-            self.spi_dev.writebytes([0x00 | subframe])
-            # query frame state
-            timeout_counter = 0
-            while True:
-                frame_state = self.spi_dev.readbytes(1)
-                if frame_state[0] == (0x10 | subframe):
-                    time.sleep(0.01)  # wait for MCU to flush FIFO
-                    break
-                else:
-                    timeout_counter += 1
-                    # re-trigger if there is a timeout (SPI command lost)
-                    if (timeout_counter > 250):
-                        timeout_counter = 0
-                        self.spi_dev.writebytes([0x00 | subframe])
-                        print(f" - Re-trigger subframe F{subframe} capture.")
-                    time.sleep(0.01)
-            # data transfering
-            data_stream = np.zeros((self.Ndata, self.height, 2 * (self.width + 1)), dtype=np.int16)
-            for integr in range(0, self.Ndata):
-                for line in range(0, self.height):
-                    temp = self.spi_dev.readbytes(4 * (self.width + 1))
-                    temp = np.array(temp, dtype=np.int16)
-                    data_stream[integr, line, :] = (temp[1::2] & 0x0f) << 8 | temp[0::2]
-            data[subframe - 1, 0, :, :] = data_stream[self.Ndata - 1, :, 2::2] - data_stream[0, :, 2::2]
-            data[subframe - 1, 1, :, :] = data_stream[self.Ndata - 1, :, 3::2] - data_stream[0, :, 3::2]
+            if frame_state[0] == (0x11):
+                break
+            else:
+                timeout_counter += 1
+                # re-trigger if there is a timeout (SPI command lost)
+                if (timeout_counter > 250):
+                    timeout_counter = 0
+                    self.spi_dev.writebytes([0x01])
+                    print(f" - Re-trigger Frame capture.")
+        # data transfering
+        data_stream = np.zeros((4, self.height, 2 * (self.width + 1)), dtype=np.int16)
+        for subframe in range(0, 4):
+            for line in range(0, self.height):
+                temp = self.spi_dev.readbytes(4 * (self.width + 1))
+                temp = np.array(temp, dtype=np.int16)
+                data_stream[subframe, line, :] = (temp[1::2] & 0x0f) << 8 | temp[0::2]
+        data[:, 0, :, :] = data_stream[:, :, 2::2]
+        data[:, 1, :, :] = data_stream[:, :, 3::2]
         # end of for subframe in range(1, 5)
         data = np.maximum(data, 0)  # make sure of no negative values
         return data
