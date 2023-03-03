@@ -40,7 +40,7 @@ def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
 class LidarConfig:
     # dimensions
     height: int = 80
-    width: int = 104
+    width: int = 104  # not including header pixel
     Ndata: int = 2
     Nlight: int = 1024
     # timing
@@ -196,6 +196,8 @@ class LidarControl:
     @timeout(5)
     def load_MCU(self, binary_path="dvp2proc2spi_lnk.elf"):
         try:
+            # specifically ask for dual-core reset-halt-run in openocd
+            # otherwise core 1 will crash after boot (bug in openocd?)
             openocd_cmd = f"program {binary_path} verify; " + \
                 "reset halt; " + \
                 "rp2040.core1 arp_reset assert 0; " + \
@@ -265,6 +267,5 @@ class LidarControl:
                 data_stream[subframe, line, :] = (temp[1::2] & 0x0f) << 8 | temp[0::2]
         data[:, 0, :, :] = data_stream[:, :, 2::2]
         data[:, 1, :, :] = data_stream[:, :, 3::2]
-        # end of for subframe in range(1, 5)
         data = np.maximum(data, 0)  # make sure of no negative values
         return data
