@@ -53,7 +53,7 @@ if physical_monitor_cnt > 0:
 else:
     os.environ["DISPLAY"] = default_DISPLAY_env
     print(f"No physical monitors reqiured for modulating! Exiting...")
-    # sys.exit() # commented for debug
+    sys.exit() # commented for debug
 
 # double check if display is available and acquire final infos
 try:
@@ -62,7 +62,7 @@ try:
     for monitor in monitors:
         print(monitor)
     LCoS = monitors[0]
-    Screen = monitors[1]
+    Screen = monitors[0]
 except:
     print("No display is attached!")
     os.environ["DISPLAY"] = default_DISPLAY_env
@@ -112,13 +112,6 @@ try:
     win_modulation.overrideredirect(True)  # borderless
     win_modulation.attributes('-fullscreen', True)  # full screen
     panel_modulate = tk.Label(win_modulation)
-    # display window setup
-    win_display = tk.Tk()
-    win_display.geometry(f"{Screen.width}x{Screen.height}+{Screen.x}+{Screen.y}")
-    # win_display.config(cursor="none")  # hide cursor
-    # win_display.overrideredirect(True)  # borderless
-    # win_display.attributes('-fullscreen', True)  # full screen
-    panel_display = tk.Label(win_display)
 
     # light path modulation images
     modulation = np.zeros([5, LCoS.height, LCoS.width], dtype=np.uint8)
@@ -129,9 +122,11 @@ try:
     modulation[4, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-20, -20])
 
     # main loop for LiDAR capturing
+    sigs = []
     for multi_frame in range(5):
 
         # LCoS modulation
+        shift_vec = np.array([(multi_frame - 1) % 2, (multi_frame - 1) // 2]) / 2
         img =  ImageTk.PhotoImage(Image.fromarray(modulation[multi_frame, :, :]))
         panel_modulate.configure(image=img)
         panel_modulate.pack()
@@ -139,22 +134,29 @@ try:
         time.sleep(0.1)
 
         # acquire physical sensor data
-        data = lidar.acquire_data()
+        sig = SensorSignal.acquire_signal(lidar, shift_vec=shift_vec, downsample_ratio=2)
+        sigs.append(sig)
 
         # progress info
         print(f" - Full frame {multi_frame} captured.")
-        
-        # result display
-        img =  ImageTk.PhotoImage(Image.fromarray(data.calc_intensity()))
-        panel_display.configure(image=img)
-        panel_display.pack()
-        win_display.update()
-        time.sleep(5)
 
         print()
 
-    # end of for multi_frame in range(4)
+    # end of for multi_frame in range(5)
     win_modulation.destroy()
+
+    # display results
+    os.environ["DISPLAY"] = default_DISPLAY_env
+    # display window setup
+    win_display = tk.Tk()
+    panel_display = []
+    for i in range(5):
+        panel_display.append(tk.Label(win_display))
+        img =  ImageTk.PhotoImage(Image.fromarray(sigs[i].calc_intensity()))
+        panel_display[-1].configure(image=img)
+        panel_display[-1].pack()
+    print(f" - Result display.")
+    win_display.mainloop()
 
 # end of main program
 
