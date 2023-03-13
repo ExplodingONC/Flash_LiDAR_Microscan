@@ -74,8 +74,8 @@ lidar_cfg = LidarControl.LidarConfig()
 lidar_cfg.width = int(104)  # not including header pixel
 lidar_cfg.height = int(80)
 lidar_cfg.Ndata = int(2)
-lidar_cfg.Nlight = int(32)
-lidar_cfg.light_delay = 1.5
+lidar_cfg.Nlight = int(12000)
+lidar_cfg.light_delay = 2
 lidar = LidarControl.LidarControl(lidar_cfg)
 try:
     lidar.connect_GPIO()
@@ -156,7 +156,7 @@ try:
         imgs.append(ImageTk.PhotoImage(Image.fromarray(sigs[i].calc_intensity())))
         panel_display[-1].configure(image=imgs[-1])
         panel_display[-1].pack()
-    print(f" - Result display.")
+    print(f" - Result displayd.")
     win_display.mainloop()
 
 # end of main program
