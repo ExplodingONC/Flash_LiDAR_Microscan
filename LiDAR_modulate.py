@@ -2,6 +2,7 @@
 import traceback
 import os
 import sys
+import subprocess
 import time
 import datetime
 import screeninfo
@@ -11,6 +12,7 @@ import scipy.constants as const
 import tkinter as tk
 from PIL import ImageTk, Image
 # import custom modules
+import gratings
 import LidarControl
 import SensorSignal
 
@@ -43,18 +45,15 @@ try:
 except:
     physical_monitor_cnt = 0
 
-# decide DISPLAY environment variable
+# force physical DISPLAY environment
 print(f"{default_monitor_cnt} default monitors, {physical_monitor_cnt} physical monitors.")
 if physical_monitor_cnt > 0:
     os.environ["DISPLAY"] = physical_DISPLAY_env
     print(f"Physical monitors available! Using physical displays.")
 else:
     os.environ["DISPLAY"] = default_DISPLAY_env
-    if default_monitor_cnt > 0:
-        print(f"No physical monitors! Using default settings.")
-    else:
-        print(f"No monitors attached! Nowhere to display. Exiting...")
-        sys.exit()
+    print(f"No physical monitors reqiured for modulating! Exiting...")
+    # sys.exit() # commented for debug
 
 # double check if display is available and acquire final infos
 try:
@@ -62,7 +61,8 @@ try:
     print("Total screen count:", len(monitors))
     for monitor in monitors:
         print(monitor)
-    display = monitors[0]
+    LCoS = monitors[0]
+    Screen = monitors[1]
 except:
     print("No display is attached!")
     os.environ["DISPLAY"] = default_DISPLAY_env
@@ -74,8 +74,8 @@ lidar_cfg = LidarControl.LidarConfig()
 lidar_cfg.width = int(104)  # not including header pixel
 lidar_cfg.height = int(80)
 lidar_cfg.Ndata = int(2)
-lidar_cfg.Nlight = int(12000)
-lidar_cfg.light_delay = 2.0
+lidar_cfg.Nlight = int(32)
+lidar_cfg.light_delay = 1.5
 lidar = LidarControl.LidarControl(lidar_cfg)
 try:
     lidar.connect_GPIO()
@@ -105,44 +105,56 @@ else:
 print()
 try:
 
+    # modulation window setup
+    win_modulation = tk.Tk()
+    win_modulation.geometry(f"{LCoS.width}x{LCoS.height}+{LCoS.x}+{LCoS.y}")
+    win_modulation.config(cursor="none")  # hide cursor
+    win_modulation.overrideredirect(True)  # borderless
+    win_modulation.attributes('-fullscreen', True)  # full screen
+    panel_modulate = tk.Label(win_modulation)
     # display window setup
-    target_width = display.width // 2
-    target_height = display.height // 2
-    target_scale = min((target_width // lidar_cfg.width), (target_height // lidar_cfg.height))
-    window_width = target_scale * lidar_cfg.width
-    window_height = target_scale * lidar_cfg.height
     win_display = tk.Tk()
-    win_display.geometry(f"{window_height}x{window_width}+{display.x}+{display.y}")
-    panel = tk.Label(win_display)
+    win_display.geometry(f"{Screen.width}x{Screen.height}+{Screen.x}+{Screen.y}")
+    # win_display.config(cursor="none")  # hide cursor
+    # win_display.overrideredirect(True)  # borderless
+    # win_display.attributes('-fullscreen', True)  # full screen
+    panel_display = tk.Label(win_display)
+
+    # light path modulation images
+    modulation = np.zeros([5, LCoS.height, LCoS.width], dtype=np.uint8)
+    modulation[0, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[np.inf, np.inf])
+    modulation[1, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[20, 20])
+    modulation[2, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[20, -20])
+    modulation[3, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-20, 20])
+    modulation[4, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-20, -20])
 
     # main loop for LiDAR capturing
-    while 1:
+    for multi_frame in range(5):
+
+        # LCoS modulation
+        img =  ImageTk.PhotoImage(Image.fromarray(modulation[multi_frame, :, :]))
+        panel_modulate.configure(image=img)
+        panel_modulate.pack()
+        win_modulation.update()
+        time.sleep(0.1)
 
         # acquire physical sensor data
-        sig = SensorSignal.acquire_signal(lidar, shift_vec=[0, 0], downsample_ratio=2)
-        # progress info
-        print(f" - Full frame captured.")
+        data = lidar.acquire_data()
 
-        # process LiDAR data
-        distance = sig.calc_dist()
-        # calculate avg intensity
-        intensity = sig.calc_intensity()
-        # print distance
-        np.set_printoptions(formatter={'float': lambda x: "{0:5.2f}".format(x)})
-        print(distance)
-        # display intensity map
-        # make sure of no overflow values
-        disp_intensity = np.minimum(intensity, 1024)
-        disp_intensity = np.array(disp_intensity // 4, dtype=np.uint8)
-        disp_intensity = np.rot90(disp_intensity, k=1, axes=(0,1))
-        img = ImageTk.PhotoImage(Image.fromarray(disp_intensity).resize((window_height, window_width), Image.NEAREST))
-        panel.configure(image=img)
-        panel.pack()
+        # progress info
+        print(f" - Full frame {multi_frame} captured.")
+        
+        # result display
+        img =  ImageTk.PhotoImage(Image.fromarray(data.calc_intensity()))
+        panel_display.configure(image=img)
+        panel_display.pack()
         win_display.update()
+        time.sleep(5)
 
         print()
 
-    # end of while 1
+    # end of for multi_frame in range(4)
+    win_modulation.destroy()
 
 # end of main program
 
