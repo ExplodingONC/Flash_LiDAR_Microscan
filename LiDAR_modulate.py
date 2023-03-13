@@ -150,10 +150,11 @@ try:
     # display window setup
     win_display = tk.Tk()
     panel_display = []
+    imgs = []
     for i in range(5):
         panel_display.append(tk.Label(win_display))
-        img =  ImageTk.PhotoImage(Image.fromarray(sigs[i].calc_intensity()))
-        panel_display[-1].configure(image=img)
+        imgs.append(ImageTk.PhotoImage(Image.fromarray(sigs[i].calc_intensity())))
+        panel_display[-1].configure(image=imgs[-1])
         panel_display[-1].pack()
     print(f" - Result display.")
     win_display.mainloop()
