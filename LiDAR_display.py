@@ -105,15 +105,33 @@ else:
 print()
 try:
 
+    # window settings
+    img_rot = 1
+    pack_side = tk.LEFT
+    # decide window geometry
+    target_width = int(display.width / 1.5)
+    target_height = int(display.height / 1.5)
+    if img_rot % 2 == 1:
+        img_width = lidar_cfg.height
+        img_height = lidar_cfg.width
+    else:
+        img_width = lidar_cfg.width
+        img_height = lidar_cfg.height
+    if pack_side == tk.LEFT or pack_side == tk.RIGHT:
+        target_scale = min((target_width // img_width) // 2, (target_height // img_height))
+        window_width = target_scale * img_width * 2
+        window_height = target_scale * img_height
+    else:
+        target_scale = min((target_width // img_width), (target_height // img_height) // 2)
+        window_width = target_scale * img_width
+        window_height = target_scale * img_height * 2
+    img_width = img_width * target_scale
+    img_height = img_height * target_scale
     # display window setup
-    target_width = display.width // 2
-    target_height = display.height // 2
-    target_scale = min((target_width // lidar_cfg.width), (target_height // lidar_cfg.height))
-    window_width = target_scale * lidar_cfg.width
-    window_height = target_scale * lidar_cfg.height
     win_display = tk.Tk()
-    win_display.geometry(f"{window_height}x{window_width}+{display.x}+{display.y}")
-    panel = tk.Label(win_display)
+    win_display.geometry(f"{window_width}x{window_height}+{display.x}+{display.y}")
+    panel_intensity = tk.Label(win_display)
+    panel_distance = tk.Label(win_display)
 
     # main loop for LiDAR capturing
     while 1:
@@ -134,10 +152,17 @@ try:
         # make sure of no overflow values
         disp_intensity = np.minimum(intensity, 1024)
         disp_intensity = np.array(disp_intensity // 4, dtype=np.uint8)
-        disp_intensity = np.rot90(disp_intensity, k=1, axes=(0,1))
-        img = ImageTk.PhotoImage(Image.fromarray(disp_intensity).resize((window_height, window_width), Image.NEAREST))
-        panel.configure(image=img)
-        panel.pack()
+        disp_intensity = np.rot90(disp_intensity, k=img_rot, axes=(0, 1))
+        img_I = ImageTk.PhotoImage(Image.fromarray(disp_intensity).resize((img_width, img_height), Image.NEAREST))
+        panel_intensity.configure(image=img_I)
+        panel_intensity.pack(side=pack_side)
+        disp_distance = distance * 6
+        disp_distance = np.array(disp_distance, dtype=np.uint8)
+        disp_distance = np.rot90(disp_distance, k=img_rot, axes=(0, 1))
+        img_D = ImageTk.PhotoImage(Image.fromarray(disp_distance).resize((img_width, img_height), Image.NEAREST))
+        panel_distance.configure(image=img_D)
+        panel_distance.pack(side=pack_side)
+
         win_display.update()
 
         print()
