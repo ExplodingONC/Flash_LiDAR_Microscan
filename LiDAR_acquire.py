@@ -61,10 +61,16 @@ try:
             + (data[2, 0, :, :] - data[2, 1, :, :])
         delta_F2 = (data[1, 1, :, :] - data[1, 0, :, :]) \
             + (data[3, 0, :, :] - data[3, 1, :, :])
-        print("F1_Ch1", data[0, 0, sample_Y, sample_X] + data[2, 1, sample_Y, sample_X], " F1_Ch2", data[0, 1, sample_Y, sample_X] + data[2, 0, sample_Y, sample_X])
-        print("Delta_1", delta_F1[sample_Y, sample_X])
-        print("F2_Ch1", data[1, 0, sample_Y, sample_X] + data[3, 1, sample_Y, sample_X], " F2_Ch2", data[1, 1, sample_Y, sample_X] + data[3, 0, sample_Y, sample_X])
-        print("Delta_2", delta_F2[sample_Y, sample_X])
+        F1_Ch1 = data[0, 0, sample_Y, sample_X] + data[2, 1, sample_Y, sample_X]
+        F1_Ch2 = data[0, 1, sample_Y, sample_X] + data[2, 0, sample_Y, sample_X]
+        F2_Ch1 = data[1, 0, sample_Y, sample_X] + data[3, 1, sample_Y, sample_X]
+        F2_Ch2 = data[1, 1, sample_Y, sample_X] + data[3, 0, sample_Y, sample_X]
+        F1_avg = F1_Ch1 + F1_Ch2
+        F2_avg = F2_Ch1 + F2_Ch2
+        print("F1_Ch1", F1_Ch1, " F1_Ch2", F1_Ch2)
+        print("F1_avg", F1_avg, "Delta_1", delta_F1[sample_Y, sample_X])
+        print("F2_Ch1", F2_Ch1, " F2_Ch2", F2_Ch2)
+        print("F2_avg", F2_avg, "Delta_2", delta_F2[sample_Y, sample_X])
 
         # calculate avg intensity
         intensity = numpy.sum(data, axis=(0, 1)) // 8

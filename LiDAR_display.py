@@ -147,7 +147,22 @@ try:
         intensity = sig.calc_intensity()
         # print distance
         np.set_printoptions(formatter={'float': lambda x: "{0:5.2f}".format(x)})
-        print(distance)
+        print(f"Min: {np.min(distance):5.2f}  Max: {np.max(distance):5.2f}  Avg: {np.mean(distance):5.2f}")
+        # center data
+        sample_X = lidar_cfg.width // 2
+        sample_Y = lidar_cfg.height // 2
+        delta_F1 = sig.delta_F1[sample_Y, sample_X]
+        delta_F2 = sig.delta_F2[sample_Y, sample_X]
+        F1_Ch1 = sig.data[0, 0, sample_Y, sample_X] + sig.data[2, 1, sample_Y, sample_X]
+        F1_Ch2 = sig.data[0, 1, sample_Y, sample_X] + sig.data[2, 0, sample_Y, sample_X]
+        F2_Ch1 = sig.data[1, 0, sample_Y, sample_X] + sig.data[3, 1, sample_Y, sample_X]
+        F2_Ch2 = sig.data[1, 1, sample_Y, sample_X] + sig.data[3, 0, sample_Y, sample_X]
+        F1_avg = F1_Ch1 + F1_Ch2
+        F2_avg = F2_Ch1 + F2_Ch2
+        print("F1_Ch1", F1_Ch1, " F1_Ch2", F1_Ch2)
+        print("F1_avg", F1_avg, "Delta_1", delta_F1)
+        print("F2_Ch1", F2_Ch1, " F2_Ch2", F2_Ch2)
+        print("F2_avg", F2_avg, "Delta_2", delta_F2)
         # display intensity map
         # make sure of no overflow values
         disp_intensity = np.minimum(intensity, 1024)
@@ -156,7 +171,7 @@ try:
         img_I = ImageTk.PhotoImage(Image.fromarray(disp_intensity).resize((img_width, img_height), Image.NEAREST))
         panel_intensity.configure(image=img_I)
         panel_intensity.pack(side=pack_side)
-        disp_distance = distance * 6
+        disp_distance = np.minimum(distance, 5.0) * 50
         disp_distance = np.array(disp_distance, dtype=np.uint8)
         disp_distance = np.rot90(disp_distance, k=img_rot, axes=(0, 1))
         img_D = ImageTk.PhotoImage(Image.fromarray(disp_distance).resize((img_width, img_height), Image.NEAREST))
