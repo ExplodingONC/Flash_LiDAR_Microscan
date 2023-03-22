@@ -75,8 +75,10 @@ lidar_cfg = LidarControl.LidarConfig()
 lidar_cfg.width = int(104)  # not including header pixel
 lidar_cfg.height = int(80)
 lidar_cfg.Ndata = int(2)
-lidar_cfg.Nlight = int(128)
-lidar_cfg.light_delay = 1.5
+lidar_cfg.Nlight = int(12000)
+lidar_cfg.T0_pulse = int(8)
+lidar_cfg.Light_pulse = int(7)
+lidar_cfg.light_delay = 2.5
 lidar = LidarControl.LidarControl(lidar_cfg)
 try:
     lidar.connect_GPIO()
@@ -116,11 +118,12 @@ try:
 
     # light path modulation images
     modulation = np.zeros([5, LCoS.height, LCoS.width], dtype=np.uint8)
+    grating_pitch = 252
     modulation[0, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[np.inf, np.inf])
-    modulation[1, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[100, 100])
-    modulation[2, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[100, -100])
-    modulation[3, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-100, 100])
-    modulation[4, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-100, -100])
+    modulation[1, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[grating_pitch, grating_pitch])
+    modulation[2, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[grating_pitch, -grating_pitch])
+    modulation[3, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-grating_pitch, grating_pitch])
+    modulation[4, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-grating_pitch, -grating_pitch])
 
     # main loop for LiDAR capturing
     zero_order = []
@@ -128,7 +131,7 @@ try:
     for multi_frame in range(5):
 
         # LCoS modulation
-        shift_vec = np.array([(multi_frame - 1) % 2, (multi_frame - 1) // 2]) / 2
+        shift_vec = np.array([(multi_frame - 1) % 2, (multi_frame - 0) // 2]) / 2
         img = ImageTk.PhotoImage(Image.fromarray(modulation[multi_frame, :, :]))
         panel.configure(image=img)
         panel.pack()
@@ -163,7 +166,7 @@ try:
     mpl.rcParams['image.interpolation'] = 'none'
     fig, axs = plt.subplots(nrows=2, ncols=3)
     # print raw distance
-    im_dist = axs[0, 0].imshow(sigs[0].calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
+    im_dist = axs[0, 0].imshow(sigs[0].calc_dist(), cmap='viridis_r', vmin=0, vmax=5)
     fig.colorbar(im_dist, ax=axs[0, 0])
     axs[0, 0].set_title("Raw distance")
     # print raw intensity
@@ -171,7 +174,7 @@ try:
     fig.colorbar(im_int, ax=axs[1, 0])
     axs[1, 0].set_title("Raw intensity")
     # print super-res distance (linear)
-    im_dist = axs[0, 1].imshow(sig_sr_lin.calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
+    im_dist = axs[0, 1].imshow(sig_sr_lin.calc_dist(), cmap='viridis_r', vmin=0, vmax=5)
     fig.colorbar(im_dist, ax=axs[0, 1])
     axs[0, 1].set_title("Linear super-res distance")
     # print super-res intensity (linear)
@@ -179,7 +182,7 @@ try:
     fig.colorbar(im_int, ax=axs[1, 1])
     axs[1, 1].set_title("Linear super-res intensity")
     # print super-res distance (iterative)
-    im_dist = axs[0, 2].imshow(sig_sr_ibp.calc_dist(), cmap='viridis_r', vmin=0, vmax=15)
+    im_dist = axs[0, 2].imshow(sig_sr_ibp.calc_dist(), cmap='viridis_r', vmin=0, vmax=5)
     fig.colorbar(im_dist, ax=axs[0, 2])
     axs[0, 2].set_title("IBP super-res distance")
     # print super-res intensity (iterative) (it's pointless here since intensity is fully simulated)

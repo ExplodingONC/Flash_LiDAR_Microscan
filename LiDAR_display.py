@@ -62,7 +62,7 @@ try:
     print("Total screen count:", len(monitors))
     for monitor in monitors:
         print(monitor)
-    display = monitors[0]
+    Screen = monitors[1]
 except:
     print("No display is attached!")
     os.environ["DISPLAY"] = default_DISPLAY_env
@@ -75,7 +75,9 @@ lidar_cfg.width = int(104)  # not including header pixel
 lidar_cfg.height = int(80)
 lidar_cfg.Ndata = int(2)
 lidar_cfg.Nlight = int(12000)
-lidar_cfg.light_delay = 2.0
+lidar_cfg.T0_pulse = int(8)
+lidar_cfg.Light_pulse = int(7)
+lidar_cfg.light_delay = 2.5
 lidar = LidarControl.LidarControl(lidar_cfg)
 try:
     lidar.connect_GPIO()

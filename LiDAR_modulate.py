@@ -62,7 +62,7 @@ try:
     for monitor in monitors:
         print(monitor)
     LCoS = monitors[0]
-    Screen = monitors[0]
+    Screen = monitors[1]
 except:
     print("No display is attached!")
     os.environ["DISPLAY"] = default_DISPLAY_env
@@ -139,7 +139,7 @@ try:
 
         # progress info
         print(f" - Full frame {multi_frame} captured.")
-
+        
         print()
 
     # end of for multi_frame in range(5)
