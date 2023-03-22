@@ -109,8 +109,8 @@ try:
     img_rot = 1
     pack_side = tk.LEFT
     # decide window geometry
-    target_width = int(display.width / 1.5)
-    target_height = int(display.height / 1.5)
+    target_width = int(Screen.width / 1.5)
+    target_height = int(Screen.height / 1.5)
     if img_rot % 2 == 1:
         img_width = lidar_cfg.height
         img_height = lidar_cfg.width
@@ -129,7 +129,7 @@ try:
     img_height = img_height * target_scale
     # display window setup
     win_display = tk.Tk()
-    win_display.geometry(f"{window_width}x{window_height}+{display.x}+{display.y}")
+    win_display.geometry(f"{window_width}x{window_height}+{Screen.x}+{Screen.y}")
     panel_intensity = tk.Label(win_display)
     panel_distance = tk.Label(win_display)
 
