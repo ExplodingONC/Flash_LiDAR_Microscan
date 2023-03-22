@@ -264,7 +264,7 @@ class LidarControl:
             for line in range(0, self.height):
                 temp = self.spi_dev.readbytes(4 * (self.width + 1))
                 temp = np.array(temp, dtype=np.int16)
-                data_stream[subframe, line, :] = (temp[1::2] & 0x0f) << 8 | temp[0::2]
+                data_stream[subframe, line, :] = (temp[1::2] << 8) | temp[0::2]
         data[:, 0, :, :] = data_stream[:, :, 2::2]
         data[:, 1, :, :] = data_stream[:, :, 3::2]
         return data
