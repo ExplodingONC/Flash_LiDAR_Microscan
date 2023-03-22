@@ -267,5 +267,4 @@ class LidarControl:
                 data_stream[subframe, line, :] = (temp[1::2] & 0x0f) << 8 | temp[0::2]
         data[:, 0, :, :] = data_stream[:, :, 2::2]
         data[:, 1, :, :] = data_stream[:, :, 3::2]
-        data = np.maximum(data, 0)  # make sure of no negative values
         return data
