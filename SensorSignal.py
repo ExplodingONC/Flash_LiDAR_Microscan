@@ -138,16 +138,16 @@ class SensorSignal:
 
     # calculate intensity
     def calc_intensity(self):
-        return np.sum(self.data, axis=(0, 1)) / 8
+        return np.sum(np.abs(self.data), axis=(0, 1)) / 8
 
     # calculate deltas
     def calc_delta(self):
-        # delta_F1 = (F1_Ch2 - F1_Ch1) + (F3_Ch1 - F3_Ch2)
-        self.delta_F1 = (self.data[0, 1, :, :] - self.data[0, 0, :, :]) \
-            + (self.data[2, 0, :, :] - self.data[2, 1, :, :])
-        # delta_F2 = (F2_Ch2 - F2_Ch1) + (F4_Ch1 - F4_Ch2)
-        self.delta_F2 = (self.data[1, 1, :, :] - self.data[1, 0, :, :]) \
-            + (self.data[3, 0, :, :] - self.data[3, 1, :, :])
+        # delta_F1 = (F1_Ch2 + F3_Ch1) - (F1_Ch1 + F3_Ch2)
+        self.delta_F1 = (self.data[0, 1, :, :] + self.data[2, 0, :, :]) * 1.05 \
+            - (self.data[0, 0, :, :] + self.data[2, 1, :, :])
+        # delta_F2 = (F2_Ch2 + F4_Ch1) - (F2_Ch1 + F4_Ch2)
+        self.delta_F2 = (self.data[1, 1, :, :] + self.data[3, 0, :, :]) * 1.05 \
+            - (self.data[1, 0, :, :] + self.data[3, 1, :, :])
 
     # extract distance
     def calc_dist(self):
