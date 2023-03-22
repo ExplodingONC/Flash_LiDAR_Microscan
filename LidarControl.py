@@ -45,6 +45,7 @@ class LidarConfig:
     Nlight: int = 1024
     # timing
     T0_pulse: int = 8
+    Light_pulse: int = 7
     VTX3_pulse: int = 28
     ADC_delay: int = 1
     light_delay: float = 1.5
@@ -76,7 +77,7 @@ class LidarConfig:
             (0x18, (self.T0_pulse) & 0xFF),  # VTX2
             (0x19, (self.VTX3_pulse >> 8) & 0xFF),  # VTX3
             (0x1A, (self.VTX3_pulse) & 0xFF),
-            (0x1B, (self.T0_pulse) & 0xFF),  # light_pulse_width
+            (0x1B, (self.Light_pulse) & 0xFF),  # light_pulse_width
             (0x1D, (light_delay_int) & 0xFF),  # light_pulse_offset
             (0x1F, (self.T0_pulse >> 1) & 0x7F),  # P4_half_delay, P4_delay
             (0x20, (0b0 << 7) | ((light_delay_half << 6) & 0x40) | (0b1001)),  # L/A, Light_pulse_half_delay, H_pixel_blanking
