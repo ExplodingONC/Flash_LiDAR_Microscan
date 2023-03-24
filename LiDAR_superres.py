@@ -63,7 +63,7 @@ try:
     print("Total screen count:", len(monitors))
     for monitor in monitors:
         print(monitor)
-    LCoS = monitors[0]
+    LCoS = monitors[1]
 except:
     print("No display is attached!")
     os.environ["DISPLAY"] = default_DISPLAY_env
@@ -78,7 +78,7 @@ lidar_cfg.Ndata = int(2)
 lidar_cfg.Nlight = int(12000)
 lidar_cfg.T0_pulse = int(8)
 lidar_cfg.Light_pulse = int(7)
-lidar_cfg.light_delay = 2.5
+lidar_cfg.light_delay = 0.5
 lidar = LidarControl.LidarControl(lidar_cfg)
 try:
     lidar.connect_GPIO()
@@ -119,11 +119,12 @@ try:
     # light path modulation images
     modulation = np.zeros([5, LCoS.height, LCoS.width], dtype=np.uint8)
     grating_pitch = 252
-    modulation[0, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[np.inf, np.inf])
-    modulation[1, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[grating_pitch, grating_pitch])
-    modulation[2, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[grating_pitch, -grating_pitch])
-    modulation[3, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-grating_pitch, grating_pitch])
-    modulation[4, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-grating_pitch, -grating_pitch])
+    grating_range = [0, 235]
+    modulation[0, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[np.inf, np.inf])
+    modulation[1, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[grating_pitch, grating_pitch])
+    modulation[2, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[grating_pitch, -grating_pitch])
+    modulation[3, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[-grating_pitch, grating_pitch])
+    modulation[4, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[-grating_pitch, -grating_pitch])
 
     # main loop for LiDAR capturing
     zero_order = []
@@ -145,7 +146,7 @@ try:
         print(f" - Full frame {multi_frame} captured.")
         # log data
         if multi_frame > 0:
-            sig -= zero_order * 0.1  # subtract the 0th order diffraction
+            sig -= zero_order * 0.05  # subtract the 0th order diffraction
             sigs.append(sig)
         else:
             zero_order = sig

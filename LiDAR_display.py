@@ -62,7 +62,7 @@ try:
     print("Total screen count:", len(monitors))
     for monitor in monitors:
         print(monitor)
-    Screen = monitors[1]
+    Screen = monitors[0]
 except:
     print("No display is attached!")
     os.environ["DISPLAY"] = default_DISPLAY_env
@@ -77,7 +77,7 @@ lidar_cfg.Ndata = int(2)
 lidar_cfg.Nlight = int(12000)
 lidar_cfg.T0_pulse = int(8)
 lidar_cfg.Light_pulse = int(7)
-lidar_cfg.light_delay = 2.5
+lidar_cfg.light_delay = 0.5
 lidar = LidarControl.LidarControl(lidar_cfg)
 try:
     lidar.connect_GPIO()
@@ -153,8 +153,8 @@ try:
         # center data
         sample_X = lidar_cfg.width // 2
         sample_Y = lidar_cfg.height // 2
-        delta_F1 = sig.delta_F1[sample_Y, sample_X]
-        delta_F2 = sig.delta_F2[sample_Y, sample_X]
+        delta_F1 = int(sig.delta_F1[sample_Y, sample_X])
+        delta_F2 = int(sig.delta_F2[sample_Y, sample_X])
         F1_Ch1 = sig.data[0, 0, sample_Y, sample_X] + sig.data[2, 1, sample_Y, sample_X]
         F1_Ch2 = sig.data[0, 1, sample_Y, sample_X] + sig.data[2, 0, sample_Y, sample_X]
         F2_Ch1 = sig.data[1, 0, sample_Y, sample_X] + sig.data[3, 1, sample_Y, sample_X]
@@ -165,6 +165,7 @@ try:
         print("F1_avg", F1_avg, "Delta_1", delta_F1)
         print("F2_Ch1", F2_Ch1, " F2_Ch2", F2_Ch2)
         print("F2_avg", F2_avg, "Delta_2", delta_F2)
+        print(f"Dist {distance[sample_Y, sample_X]:5.2f}")
         # display intensity map
         # make sure of no overflow values
         disp_intensity = np.minimum(intensity, 1024)
@@ -173,6 +174,7 @@ try:
         img_I = ImageTk.PhotoImage(Image.fromarray(disp_intensity).resize((img_width, img_height), Image.NEAREST))
         panel_intensity.configure(image=img_I)
         panel_intensity.pack(side=pack_side)
+        # display distance result
         disp_distance = np.minimum(distance, 5.0) * 50
         disp_distance = np.array(disp_distance, dtype=np.uint8)
         disp_distance = np.rot90(disp_distance, k=img_rot, axes=(0, 1))
