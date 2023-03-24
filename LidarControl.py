@@ -42,13 +42,13 @@ class LidarConfig:
     height: int = 80
     width: int = 104  # not including header pixel
     Ndata: int = 2
-    Nlight: int = 1024
+    Nlight: int = 12000
     # timing
     T0_pulse: int = 8
     Light_pulse: int = 7
     VTX3_pulse: int = 28
     ADC_delay: int = 1
-    light_delay: float = 1.5
+    light_delay: float = 0.5
     extrst_pulse: int = 16384
     frame_blank: int = 255
 
@@ -268,4 +268,5 @@ class LidarControl:
                 data_stream[subframe, line, :] = (temp[1::2] << 8) | temp[0::2]
         data[:, 0, :, :] = data_stream[:, :, 2::2]
         data[:, 1, :, :] = data_stream[:, :, 3::2]
+        data[[0, 2], :, :, :] = data[[2, 0], :, :, :]
         return data
