@@ -53,7 +53,7 @@ class LidarConfig:
     frame_blank: int = 255
 
     def generate_reg_map(self):
-        light_offset_int = math.ceil(self.C)
+        light_offset_int = math.ceil(self.light_offset)
         light_offset_half = self.light_offset % 1 > 0
         return (
             (0x00, 0b11100011),  # stop operation
