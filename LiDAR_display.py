@@ -77,7 +77,7 @@ lidar_cfg.Ndata = int(2)
 lidar_cfg.Nlight = int(12000)
 lidar_cfg.T0_pulse = int(8)
 lidar_cfg.Light_pulse = int(7)
-lidar_cfg.light_delay = 0.5
+lidar_cfg.light_offset = 0.5
 lidar = LidarControl.LidarControl(lidar_cfg)
 try:
     lidar.connect_GPIO()
