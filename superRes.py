@@ -42,6 +42,8 @@ def iterative(*sigs_ref: SensorSignal, iter_cnt=25, term_cond=0):
     depth_iter = linear(*sigs_ref).calc_dist()
     # prepare iteration vals (must use deep copy for objects)
     sigs_iter = copy.deepcopy(sigs_ref)
+    err_mean = 0
+    depth_mean = 1
     # iteration
     for iter in range(iter_cnt):
         # prepare error log
@@ -53,7 +55,7 @@ def iterative(*sigs_ref: SensorSignal, iter_cnt=25, term_cond=0):
             # back projection
             err_iter = back_projection(sig_ref, sig_iter)
             err_iter = SensorSignal.rebin(err_iter, sig_iter.resolution * 2)
-            err_iter = SensorSignal.translate(err_iter, sig_iter.shift_vector * 2)
+            err_iter = SensorSignal.translate(err_iter, (sig_iter.shift_vector - sigs_iter[0].shift_vector) * 2)
             # update error log
             err_total = err_total + err_iter
         # update iterative depth map
@@ -72,4 +74,4 @@ def iterative(*sigs_ref: SensorSignal, iter_cnt=25, term_cond=0):
     # generate result
     sig_ret = SensorSignal.SensorSignal(depth_iter.shape)
     sig_ret.sim_data(depth_iter, downsample_ratio=1, shift_vec=[0, 0])
-    return sig_ret
+    return sig_ret, iter + 1, err_mean / depth_mean
