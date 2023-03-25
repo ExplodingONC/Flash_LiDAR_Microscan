@@ -71,6 +71,7 @@ except:
 print()
 
 # Lidar setup
+img_stack_cnt = 5
 lidar_cfg = LidarControl.LidarConfig()
 lidar_cfg.width = int(104)  # not including header pixel
 lidar_cfg.height = int(80)
@@ -140,7 +141,13 @@ try:
         time.sleep(0.1)
 
         # acquire physical sensor data
-        sig = SensorSignal.acquire_signal(lidar, shift_vec=shift_vec, downsample_ratio=2)
+        for stacking in range(img_stack_cnt):
+            stack = SensorSignal.acquire_signal(lidar, shift_vec=shift_vec, downsample_ratio=2)
+            if stacking == 0:
+                sig = stack
+            else:
+                sig += stack
+            time.sleep(0.1)
 
         # progress info
         print(f" - Full frame {multi_frame} captured.")
