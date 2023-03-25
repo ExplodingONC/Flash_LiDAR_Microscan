@@ -122,10 +122,10 @@ try:
     grating_pitch = 252
     grating_range = [0, 235]
     modulation[0, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[np.inf, np.inf])
-    modulation[1, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[grating_pitch, grating_pitch])
-    modulation[2, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[grating_pitch, -grating_pitch])
-    modulation[3, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[-grating_pitch, grating_pitch])
-    modulation[4, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[-grating_pitch, -grating_pitch])
+    modulation[1, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[grating_pitch, -grating_pitch])
+    modulation[2, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[grating_pitch, grating_pitch])
+    modulation[3, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[-grating_pitch, -grating_pitch])
+    modulation[4, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[-grating_pitch, grating_pitch])
 
     # main loop for LiDAR capturing
     zero_order = []
@@ -133,12 +133,12 @@ try:
     for multi_frame in range(5):
 
         # LCoS modulation
-        shift_vec = np.array([(multi_frame - 1) % 2, (multi_frame - 0) // 2]) / 2
+        shift_vec = np.array([(multi_frame - 1) // 2, (multi_frame - 1) % 2]) / 2
         img = ImageTk.PhotoImage(Image.fromarray(modulation[multi_frame, :, :]))
         panel.configure(image=img)
         panel.pack()
         win_modulation.update()
-        time.sleep(0.1)
+        time.sleep(0.2)
 
         # acquire physical sensor data
         for stacking in range(img_stack_cnt):
@@ -166,8 +166,9 @@ try:
     # IBP super-res
     sig_sr_lin = superRes.linear(*sigs)
     print(" - Linear Calculation done.")
-    sig_sr_ibp = superRes.iterative(*sigs, iter_cnt=25, term_cond=5e-3)
-    print(" - Iterative Calculation done.")
+    sig_sr_ibp, iter_cnt, final_err = superRes.iterative(*sigs, iter_cnt=25, term_cond=1e-4)
+    print(f" - Iterative Calculation done in {iter_cnt} iters. \
+          Remaining error is {100 * final_err:6.4f}%")
 
     # result display
     os.environ["DISPLAY"] = default_DISPLAY_env

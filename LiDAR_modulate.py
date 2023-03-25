@@ -105,6 +105,9 @@ else:
 print()
 try:
 
+    img_width = lidar_cfg.width * 3
+    img_height = lidar_cfg.height * 3
+
     # modulation window setup
     win_modulation = tk.Tk()
     win_modulation.geometry(f"{LCoS.width}x{LCoS.height}+{LCoS.x}+{LCoS.y}")
@@ -115,23 +118,25 @@ try:
 
     # light path modulation images
     modulation = np.zeros([5, LCoS.height, LCoS.width], dtype=np.uint8)
-    modulation[0, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[np.inf, np.inf])
-    modulation[1, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[20, 20])
-    modulation[2, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[20, -20])
-    modulation[3, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-20, 20])
-    modulation[4, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], pitch=[-20, -20])
+    grating_pitch = 15
+    grating_range = [0, 235]
+    modulation[0, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[np.inf, np.inf])
+    modulation[1, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[grating_pitch, -grating_pitch])
+    modulation[2, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[grating_pitch, grating_pitch])
+    modulation[3, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[-grating_pitch, -grating_pitch])
+    modulation[4, :, :] = gratings.blazed_grating([LCoS.width, LCoS.height], range=grating_range, pitch=[-grating_pitch, grating_pitch])
 
     # main loop for LiDAR capturing
     sigs = []
     for multi_frame in range(5):
 
         # LCoS modulation
-        shift_vec = np.array([(multi_frame - 1) % 2, (multi_frame - 1) // 2]) / 2
+        shift_vec = np.array([(multi_frame - 1) // 2, (multi_frame - 1) % 2]) / 2
         img =  ImageTk.PhotoImage(Image.fromarray(modulation[multi_frame, :, :]))
         panel_modulate.configure(image=img)
         panel_modulate.pack()
         win_modulation.update()
-        time.sleep(0.1)
+        time.sleep(0.2)
 
         # acquire physical sensor data
         sig = SensorSignal.acquire_signal(lidar, shift_vec=shift_vec, downsample_ratio=2)
@@ -153,7 +158,7 @@ try:
     imgs = []
     for i in range(5):
         panel_display.append(tk.Label(win_display))
-        imgs.append(ImageTk.PhotoImage(Image.fromarray(sigs[i].calc_intensity())))
+        imgs.append(ImageTk.PhotoImage(Image.fromarray(sigs[i].calc_intensity()/5).resize((img_width, img_height), Image.NEAREST)))
         panel_display[-1].configure(image=imgs[-1])
         panel_display[-1].pack()
     print(f" - Result displayd.")
