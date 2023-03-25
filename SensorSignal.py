@@ -70,7 +70,7 @@ class SensorSignal:
         if (self.resolution != other.resolution).any() or self.T_0 != other.T_0:
             raise ValueError("Signals are not captured with same parameters!")
         ret = copy.deepcopy(self)
-        ret.data = self.data - other.data
+        ret.data = self.data + other.data
         return ret
     def __sub__(self, other):
         if not isinstance(other, SensorSignal):
