@@ -1,4 +1,6 @@
 # import system modules
+import os
+import sys
 import time
 import datetime
 # import utility modules
@@ -23,7 +25,17 @@ print()
 # load data
 file_dialog = tk.Tk()
 file_dialog.withdraw()
-file_path = filedialog.askopenfilename()
+FILEOPENOPTIONS = dict(title='Choose pickle data file',
+                       defaultextension='.pkl',
+                       filetypes=[('Pickle file','*.pkl'), ('All files','*.*')],
+                       initialdir=os.getcwd())
+file_path = filedialog.askopenfilename(**FILEOPENOPTIONS)
+if file_path == "":
+    print("No file is selected.")
+    sys.exit()
+if file_path.split(".")[-1] != "pkl":
+    print("Incompatible file type.")
+    sys.exit()
 file_name = file_path.split("/")[-2] + "/" + file_path.split("/")[-1]
 print(f" - Load \"{file_name}\" as data file.")
 with open(file_path, 'rb') as data_file:
