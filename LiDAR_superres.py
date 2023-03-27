@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import datetime
+import subprocess
 import screeninfo
 # import utility modules
 import numpy as np
@@ -12,6 +13,7 @@ import tkinter as tk
 from PIL import ImageTk, Image
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import pickle
 # import custom modules
 import gratings
 import LidarControl
@@ -162,6 +164,15 @@ try:
 
     # end of for multi_frame in range(4)
     win_modulation.destroy()
+    
+    # data save
+    data_folder = f"data_{date.strftime('%Y%m%d-%H%M%S')}"
+    mkdir_cmd = ["mkdir", data_folder]
+    subprocess.run(mkdir_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    file_path = data_folder + f"/raw_data.pkl"
+    with open(file_path, 'wb') as data_file:
+        pickle.dump(zero_order, data_file)
+        pickle.dump(sigs, data_file)
 
     # IBP super-res
     sig_sr_lin = superRes.linear(*sigs)
