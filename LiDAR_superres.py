@@ -200,7 +200,7 @@ try:
     im_int = axs[1, 2].imshow(sig_sr_ibp.calc_intensity(), cmap='inferno', vmin=0, vmax=np.max(sig_sr_ibp.calc_intensity()))
     fig.colorbar(im_int, ax=axs[1, 2])
     axs[1, 2].set_title("IBP super-res intensity")
-    print("D - isplay done.")
+    print(" - Display done.")
     plt.show()
 
     # data save
