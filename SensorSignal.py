@@ -97,12 +97,16 @@ class SensorSignal:
         self.T_0 = T_0
 
     # simulate data
-    def sim_data(self, depth_map, downsample_ratio=2, shift_vec=[0, 0]):
+    def sim_data(self, depth_map, reflect_map=1, downsample_ratio=2, shift_vec=[0, 0]):
+        if isinstance(reflect_map, int) or isinstance(reflect_map, float):
+            reflect_map = reflect_map * np.ones(self.resolution * downsample_ratio)
         assert tuple(self.resolution * downsample_ratio) == np.shape(depth_map)
+        assert tuple(self.resolution * downsample_ratio) == np.shape(reflect_map)
         self.shift_vector = shift_vec
         self.downsample_ratio = downsample_ratio
         map_shift = np.rint(self.shift_vector * downsample_ratio)  # still float here
         depth_map = translate(depth_map, -map_shift)
+        reflect_map = translate(reflect_map, -map_shift)
         raw_data = np.zeros((4, 2) + np.shape(depth_map))
         # signal return time
         np.seterr(invalid='ignore')
@@ -116,14 +120,14 @@ class SensorSignal:
                 + ((self.T_0 <= return_time[subframe, :, :]) & (return_time[subframe, :, :] < 2 * self.T_0)) * (return_time[subframe, :, :] - self.T_0) \
                 + ((2 * self.T_0 <= return_time[subframe, :, :]) & (return_time[subframe, :, :] < 3 * self.T_0)) * (3 * self.T_0 - return_time[subframe, :, :]) \
                 + (3 * self.T_0 <= return_time[subframe, :, :]) * np.zeros(np.shape(return_time[subframe, :, :]))
-            raw_data[subframe, 0, :, :] = raw_data[subframe, 0, :, :] * (depth_map ** float(-2))
+            raw_data[subframe, 0, :, :] = raw_data[subframe, 0, :, :] * (depth_map ** float(-2)) * reflect_map
             raw_data[subframe, 1, :, :] \
                 = (return_time[subframe, :, :] < self.T_0) * (return_time[subframe, :, :] + self.T_0 - self.T_0) \
                 + ((self.T_0 <= return_time[subframe, :, :]) & (return_time[subframe, :, :] < 2 * self.T_0)) * (2 * self.T_0 - return_time[subframe, :, :]) \
                 + ((2 * self.T_0 <= return_time[subframe, :, :]) & (return_time[subframe, :, :] < 3 * self.T_0)) * (return_time[subframe, :, :] - 2 * self.T_0) \
                 + ((3 * self.T_0 <= return_time[subframe, :, :]) & (return_time[subframe, :, :] < 4 * self.T_0)) * (4 * self.T_0 - return_time[subframe, :, :]) \
                 + (4 * self.T_0 <= return_time[subframe, :, :]) * np.zeros(np.shape(return_time[subframe, :, :]))
-            raw_data[subframe, 1, :, :] = raw_data[subframe, 1, :, :] * (depth_map ** float(-2))
+            raw_data[subframe, 1, :, :] = raw_data[subframe, 1, :, :] * (depth_map ** float(-2)) * reflect_map
         # F3, F4
         raw_data[2, 0, :, :] = raw_data[0, 1, :, :]
         raw_data[2, 1, :, :] = raw_data[0, 0, :, :]
@@ -185,3 +189,8 @@ class SensorSignal:
             depth_map[~valid_mask] = np.inf
             depth_map = np.nan_to_num(depth_map, copy=False, nan=np.inf, posinf=np.inf, neginf=np.inf)
         return depth_map
+
+    # extract reflectivity
+    def calc_reflect(self):
+        reflectivity = self.calc_intensity * (self.calc_dist ** 2) 
+        return reflectivity
