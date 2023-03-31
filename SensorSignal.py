@@ -192,5 +192,5 @@ class SensorSignal:
 
     # extract reflectivity
     def calc_reflect(self):
-        reflectivity = self.calc_intensity() * (self.calc_dist() ** 2) 
+        reflectivity = self.calc_intensity() * (self.calc_dist() ** 2) / self.T_0
         return reflectivity
