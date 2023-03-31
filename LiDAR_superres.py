@@ -169,8 +169,8 @@ try:
     sig_sr_lin = superRes.linear(*sigs)
     print(" - Linear Calculation done.")
     sig_sr_ibp, iter_cnt, final_err = superRes.iterative(*sigs, iter_cnt=10, term_cond=1e-4)
-    print(f" - Iterative Calculation done in {iter_cnt} iters. \
-          Remaining error is {100 * final_err:6.4f}%")
+    print(f" - Iterative Calculation done in {iter_cnt} iters. ", end="")
+    print(f"Remaining error is {100 * final_err:6.4f}%")
 
     # result display
     os.environ["DISPLAY"] = default_DISPLAY_env
