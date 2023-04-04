@@ -41,6 +41,10 @@ print(f" - Load \"{file_name}\" as data file.")
 with open(file_path, 'rb') as data_file:
     zero_order = pickle.load(data_file)
     sigs = pickle.load(data_file)
+    assert isinstance(zero_order, SensorSignal.SensorSignal)
+    assert isinstance(sigs, list)
+    for i in range(len(sigs)):
+        assert isinstance(sigs[i], SensorSignal.SensorSignal)
 
 # IBP super-res
 sig_sr_lin = superRes.linear(*sigs)
