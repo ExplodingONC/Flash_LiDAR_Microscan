@@ -176,28 +176,30 @@ try:
     os.environ["DISPLAY"] = default_DISPLAY_env
     mpl.rcParams['image.interpolation'] = 'none'
     fig, axs = plt.subplots(nrows=2, ncols=3)
+    range_min = np.min(sigs[0].calc_dist()) * 0.95
+    range_max = np.max(sigs[0].calc_dist()) * 1.05
     # print raw distance
-    im_dist = axs[0, 0].imshow(sigs[0].calc_dist(), cmap='viridis_r', vmin=0, vmax=5)
+    im_dist = axs[0, 0].imshow(sigs[0].calc_dist(), cmap='inferno_r', vmin=range_min, vmax=range_max)
     fig.colorbar(im_dist, ax=axs[0, 0])
     axs[0, 0].set_title("Raw distance")
     # print raw intensity
-    im_int = axs[1, 0].imshow(sigs[0].calc_intensity(), cmap='inferno', vmin=0, vmax=np.max(sigs[0].calc_intensity()))
+    im_int = axs[1, 0].imshow(sigs[0].calc_intensity(), cmap='Greys_r', vmin=0, vmax=np.max(sigs[0].calc_intensity()))
     fig.colorbar(im_int, ax=axs[1, 0])
     axs[1, 0].set_title("Raw intensity")
     # print super-res distance (linear)
-    im_dist = axs[0, 1].imshow(sig_sr_lin.calc_dist(), cmap='viridis_r', vmin=0, vmax=5)
+    im_dist = axs[0, 1].imshow(sig_sr_lin.calc_dist(), cmap='inferno_r', vmin=range_min, vmax=range_max)
     fig.colorbar(im_dist, ax=axs[0, 1])
     axs[0, 1].set_title("Linear super-res distance")
     # print super-res intensity (linear)
-    im_int = axs[1, 1].imshow(sig_sr_lin.calc_intensity(), cmap='inferno', vmin=0, vmax=np.max(sig_sr_lin.calc_intensity()))
+    im_int = axs[1, 1].imshow(sig_sr_lin.calc_intensity(), cmap='Greys_r', vmin=0, vmax=np.max(sig_sr_lin.calc_intensity()))
     fig.colorbar(im_int, ax=axs[1, 1])
     axs[1, 1].set_title("Linear super-res intensity")
     # print super-res distance (iterative)
-    im_dist = axs[0, 2].imshow(sig_sr_ibp.calc_dist(), cmap='viridis_r', vmin=0, vmax=5)
+    im_dist = axs[0, 2].imshow(sig_sr_ibp.calc_dist(), cmap='inferno_r', vmin=range_min, vmax=range_max)
     fig.colorbar(im_dist, ax=axs[0, 2])
     axs[0, 2].set_title("IBP super-res distance")
     # print super-res intensity (iterative) (it's pointless here since intensity is fully simulated)
-    im_int = axs[1, 2].imshow(sig_sr_ibp.calc_intensity(), cmap='inferno', vmin=0, vmax=np.max(sig_sr_ibp.calc_intensity()))
+    im_int = axs[1, 2].imshow(sig_sr_ibp.calc_intensity(), cmap='Greys_r', vmin=0, vmax=np.max(sig_sr_ibp.calc_intensity()))
     fig.colorbar(im_int, ax=axs[1, 2])
     axs[1, 2].set_title("IBP super-res intensity")
     print(" - Display done.")
