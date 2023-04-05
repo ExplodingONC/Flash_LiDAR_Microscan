@@ -198,7 +198,7 @@ try:
     im_dist = axs[0, 2].imshow(sig_sr_ibp.calc_dist(), cmap='inferno_r', vmin=range_min, vmax=range_max)
     fig.colorbar(im_dist, ax=axs[0, 2])
     axs[0, 2].set_title("IBP super-res distance")
-    # print super-res intensity (iterative) (it's pointless here since intensity is fully simulated)
+    # print super-res intensity (iterative)
     im_int = axs[1, 2].imshow(sig_sr_ibp.calc_intensity(), cmap='Greys_r', vmin=0, vmax=np.max(sig_sr_ibp.calc_intensity()))
     fig.colorbar(im_int, ax=axs[1, 2])
     axs[1, 2].set_title("IBP super-res intensity")
