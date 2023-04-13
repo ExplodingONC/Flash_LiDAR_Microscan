@@ -173,6 +173,7 @@ class SensorSignal:
                 / 4 * const.speed_of_light * self.T_0
             depth_map[~valid_mask] = np.inf
             depth_map = np.nan_to_num(depth_map, copy=False, nan=np.inf, posinf=np.inf, neginf=np.inf)
+            depth_map = depth_map * 1.6 - 3.0
         else:
             # for simulation data
             valid_mask = np.logical_or(
