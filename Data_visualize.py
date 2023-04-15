@@ -60,12 +60,14 @@ fig_1, axs_1 = plt.subplots(nrows=1, ncols=1, figsize=(6.4, 4))
 fig_2, axs_2 = plt.subplots(nrows=1, ncols=1, figsize=(6.4, 4))
 range_min = np.min(zero_order.calc_dist()) * 0.95
 range_max = np.max(zero_order.calc_dist()) * 1.05
-sig_used = zero_order   # zero_order, sig_sr_lin, sig_sr_ibp, sigs[0..3]
+# select data
+sig_used = sig_sr_ibp   # zero_order, sig_sr_lin, sig_sr_ibp, sigs[0..3]
+location = 'lower left'
 zoom_x_lim = (sig_used.resolution[1] * 0.4, sig_used.resolution[1] * 0.6)
 zoom_y_lim = (sig_used.resolution[0] * 0.6, sig_used.resolution[0] * 0.4)
 # print intensity
 im_1 = axs_1.imshow(sig_used.calc_intensity(), cmap='Greys_r', vmin=0, vmax=np.max(sig_used.calc_intensity()))
-axs_1_insert = zoomed_inset_axes(axs_1, 2, loc='lower right')
+axs_1_insert = zoomed_inset_axes(axs_1, 2, loc=location)
 axs_1_insert.imshow(sig_used.calc_intensity(), cmap='Greys_r', vmin=0, vmax=np.max(sig_used.calc_intensity()))
 axs_1_insert.set_xlim(zoom_x_lim)
 axs_1_insert.set_ylim(zoom_y_lim)
@@ -76,7 +78,7 @@ fig_1.colorbar(im_1, ax=axs_1)
 axs_1.set_title("Intensity")
 # print distance
 im_2 = axs_2.imshow(sig_used.calc_dist(), cmap='inferno_r', vmin=range_min, vmax=range_max)
-axs_2_insert = zoomed_inset_axes(axs_2, 2, loc='lower right')
+axs_2_insert = zoomed_inset_axes(axs_2, 2, loc=location)
 axs_2_insert.imshow(sig_used.calc_dist(), cmap='inferno_r', vmin=range_min, vmax=range_max)
 axs_2_insert.set_xlim(zoom_x_lim)
 axs_2_insert.set_ylim(zoom_y_lim)
