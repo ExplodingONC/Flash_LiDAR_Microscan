@@ -11,6 +11,7 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import ImageTk, Image
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gsp
 import matplotlib as mpl
 import pickle
 # import custom modules
@@ -56,35 +57,36 @@ print(f"Remaining error is {100 * final_err:6.4f}%")
 
 # result display
 mpl.rcParams['image.interpolation'] = 'none'
-fig_1, axs_1 = plt.subplots(nrows=1, ncols=1, figsize=(6.4, 4))
-fig_2, axs_2 = plt.subplots(nrows=1, ncols=1, figsize=(6.4, 4))
+fig_1, (axs_1, axs_1_zoomed) = plt.subplots(nrows=1, ncols=2, figsize=(10.8, 4), width_ratios=[2, 1])
+fig_2, (axs_2, axs_2_zoomed) = plt.subplots(nrows=1, ncols=2, figsize=(10.8, 4), width_ratios=[2, 1])
 range_min = np.min(zero_order.calc_dist()) * 0.95
 range_max = np.max(zero_order.calc_dist()) * 1.05
 # select data
-sig_used = sig_sr_ibp   # zero_order, sig_sr_lin, sig_sr_ibp, sigs[0..3]
-location = 'lower left'
-zoom_x_lim = (sig_used.resolution[1] * 0.4, sig_used.resolution[1] * 0.6)
-zoom_y_lim = (sig_used.resolution[0] * 0.6, sig_used.resolution[0] * 0.4)
+sig_used = sig_sr_lin   # zero_order, sig_sr_lin, sig_sr_ibp, sigs[0..3]
+zoom_x_lim = (sig_used.resolution[1] * 0.45, sig_used.resolution[1] * 0.75)
+zoom_y_lim = (sig_used.resolution[0] * 0.65, sig_used.resolution[0] * 0.35)
 # print intensity
 im_1 = axs_1.imshow(sig_used.calc_intensity(), cmap='Greys_r', vmin=0, vmax=np.max(sig_used.calc_intensity()))
-axs_1_insert = zoomed_inset_axes(axs_1, 2, loc=location)
-axs_1_insert.imshow(sig_used.calc_intensity(), cmap='Greys_r', vmin=0, vmax=np.max(sig_used.calc_intensity()))
-axs_1_insert.set_xlim(zoom_x_lim)
-axs_1_insert.set_ylim(zoom_y_lim)
-axs_1_insert.set_xticks([])
-axs_1_insert.set_yticks([])
-axs_1.indicate_inset_zoom(axs_1_insert, edgecolor="red")
+axs_1_zoomed.imshow(sig_used.calc_intensity(), cmap='Greys_r', vmin=0, vmax=np.max(sig_used.calc_intensity()))
+axs_1_zoomed.set_xlim(zoom_x_lim)
+axs_1_zoomed.set_ylim(zoom_y_lim)
+axs_1_zoomed.set_xticks([])
+axs_1_zoomed.set_yticks([])
+rect, cont = axs_1.indicate_inset_zoom(axs_1_zoomed, edgecolor="red")
+for i in range(4):
+    cont[i].set_visible(False)
 fig_1.colorbar(im_1, ax=axs_1)
 axs_1.set_title("Intensity")
 # print distance
 im_2 = axs_2.imshow(sig_used.calc_dist(), cmap='inferno_r', vmin=range_min, vmax=range_max)
-axs_2_insert = zoomed_inset_axes(axs_2, 2, loc=location)
-axs_2_insert.imshow(sig_used.calc_dist(), cmap='inferno_r', vmin=range_min, vmax=range_max)
-axs_2_insert.set_xlim(zoom_x_lim)
-axs_2_insert.set_ylim(zoom_y_lim)
-axs_2_insert.set_xticks([])
-axs_2_insert.set_yticks([])
-axs_2.indicate_inset_zoom(axs_2_insert, edgecolor="red")
+axs_2_zoomed.imshow(sig_used.calc_dist(), cmap='inferno_r', vmin=range_min, vmax=range_max)
+axs_2_zoomed.set_xlim(zoom_x_lim)
+axs_2_zoomed.set_ylim(zoom_y_lim)
+axs_2_zoomed.set_xticks([])
+axs_2_zoomed.set_yticks([])
+rect, cont = axs_2.indicate_inset_zoom(axs_2_zoomed, edgecolor="red")
+for i in range(4):
+    cont[i].set_visible(False)
 fig_2.colorbar(im_2, ax=axs_2)
 axs_2.set_title("Distance (m)")
 print(" - Display done.")
