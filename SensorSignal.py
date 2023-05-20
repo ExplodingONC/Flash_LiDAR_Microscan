@@ -48,12 +48,15 @@ class SensorSignal:
     data: np.ndarray = []
     delta_F1: np.ndarray = []
     delta_F2: np.ndarray = []
+    # post process
+    dist_mapping = True
 
     # init
     def __init__(self, resolution, downsample_ratio=1):
         self.resolution = resolution
         self.downsample_ratio = downsample_ratio
         self.data = np.zeros([4, 2] + list(resolution))
+        self.dist_mapping = True
 
     # type fix
     def __setattr__(self, name, value):
@@ -102,6 +105,7 @@ class SensorSignal:
             reflect_map = reflect_map * np.ones(self.resolution * downsample_ratio)
         assert tuple(self.resolution * downsample_ratio) == np.shape(depth_map)
         assert tuple(self.resolution * downsample_ratio) == np.shape(reflect_map)
+        self.dist_mapping = False
         self.shift_vector = shift_vec
         self.downsample_ratio = downsample_ratio
         map_shift = np.rint(self.shift_vector * downsample_ratio)  # still float here
@@ -173,7 +177,8 @@ class SensorSignal:
                 / 4 * const.speed_of_light * self.T_0
             depth_map[~valid_mask] = np.inf
             depth_map = np.nan_to_num(depth_map, copy=False, nan=np.inf, posinf=np.inf, neginf=np.inf)
-            depth_map = depth_map * 1.6 - 3.0
+            if self.dist_mapping:
+                depth_map = depth_map * 1.6 - 3.0
         else:
             # for simulation data
             valid_mask = np.logical_or(
