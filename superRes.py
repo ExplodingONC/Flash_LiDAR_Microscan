@@ -22,6 +22,32 @@ def linear(*sigs: SensorSignal):
     return sr_sig
 
 
+def linear_range(*sigs: SensorSignal):
+    # basic info
+    sr_res = sigs[0].resolution * 2
+    sr_downsample_ratio = sigs[0].downsample_ratio / 2
+    sr_sig = SensorSignal.SensorSignal(sr_res, sr_downsample_ratio)
+    sr_sig.shift_vector = sigs[0].shift_vector
+    sr_sig.set_timing(sigs[0].T_0)
+    # linear super res
+    depth_map = np.zeros(sr_res)
+    for k, signal in enumerate(sigs):
+        slice = signal.calc_dist()
+        slice = SensorSignal.rebin(slice, sr_res)
+        slice = SensorSignal.translate(slice, 2 * signal.shift_vector)
+        depth_map += slice
+    depth_map = depth_map / (k + 1)
+    reflect_map = np.zeros(sr_res)
+    for k, signal in enumerate(sigs):
+        slice = signal.calc_reflect()
+        slice = SensorSignal.rebin(slice, sr_res)
+        slice = SensorSignal.translate(slice, 2 * signal.shift_vector)
+        reflect_map += slice
+    reflect_map = reflect_map / (k + 1)
+    sr_sig.sim_data(depth_map, reflect_map=reflect_map, downsample_ratio=1, shift_vec=[0, 0])
+    return sr_sig
+
+
 def back_projection(sig_ref: SensorSignal, sig_iter: SensorSignal):
     dist_ref = sig_ref.calc_dist()
     dist_iter = sig_iter.calc_dist()
