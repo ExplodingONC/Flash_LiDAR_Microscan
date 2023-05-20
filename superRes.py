@@ -70,7 +70,7 @@ def back_projection(sig_ref: SensorSignal, sig_iter: SensorSignal):
 def iterative(*sigs_ref: SensorSignal, iter_cnt=25, term_cond=0):
     # prepare iteration start point
     sig_cnt = len(sigs_ref)
-    sig_linear = linear(*sigs_ref)
+    sig_linear = linear_range(*sigs_ref)
     depth_iter = sig_linear.calc_dist()
     reflect_iter = sig_linear.calc_reflect()
     # prepare iteration vals (must use deep copy for objects)

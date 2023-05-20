@@ -48,7 +48,7 @@ with open(file_path, 'rb') as data_file:
         assert isinstance(sigs[i], SensorSignal.SensorSignal)
 
 # IBP super-res
-sig_sr_lin = superRes.linear(*sigs)
+sig_sr_lin = superRes.linear_range(*sigs)
 print(" - Linear Calculation done.")
 sig_sr_ibp, iter_cnt, final_err = superRes.iterative(*sigs, iter_cnt=10, term_cond=1e-4)
 print(f" - Iterative Calculation done in {iter_cnt} iters. ", end="")
